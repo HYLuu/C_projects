@@ -1,0 +1,168 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\usepackage[final]{pdfpages}
+\MakeOuterQuote{"}
+\title{Writeup Document - Assignment 1}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Monte Carlo Scattered Points for $\pi$ Estimation}
+
+This plot demonstrates the uniformly scattered points in a square and inscribed quadrant. The points in the quadrant have a distance less than or equal to 1 and are blue. And the points that are a part of the square but not the circle are red. As iteration increases, which means more points, the estimated $\pi$ value will get closer. \\
+\\
+Bash script used to generate the plot: \\
+\begin{verbatim}
+./monte_carlo -n 20000 | tail -n +2 > monte_carlo.dat
+awk '$5 == 1 {print $3, $4} ' monte_carlo.dat > blue_dots.dat
+awk '$5 == 0 {print $3, $4} ' monte_carlo.dat > red_dots.dat
+
+gnuplot <<END
+    set terminal pdf
+    set output "pi_dot.pdf"
+    set size square
+    f(x) = sqrt(1 - x**2)
+    plot "blue_dots.dat" with dots title "" lt rgb "blue", \
+        "red_dots.dat" with dots title "" lt rgb "red", \
+        f(x) with lines title "" lt rgb "#000000"
+END
+
+\end{verbatim}
+
+\includepdf[pages=-,pagecommand={},width=\textwidth]{pi_dot.pdf}
+
+\section{Command Used and Discussion}
+
+\begin{itemize}
+   \item \texttt{$./monte\textunderscore carlo\; -n\;\; 20000\; |\; tail\; -n\;\; +2$ > monte\textunderscore carlo.dat}
+   \begin{itemize}
+     \item Run the \texttt{monte\textunderscore carlo C} program and set the number of points to 20000 because more dots in the plot help demonstrate that the ratio of the number of points in the quadrant to the number of points in the square is the ratio of the area of the square to the area of a quadrant of a circle. The \textit{tail} command with \textit{-n +2} output starts with line 2, meaning trimming the header line. The output is redirected to a new file so that it can be separated into red and blue points.
+   \end{itemize}
+   \item \texttt{awk $'\$5\; ==\; 1\; \{print\;\; \$3,\; \$4\}\; '$ monte\textunderscore carlo.dat > blue\textunderscore dots.dat}
+   \begin{itemize}
+     \item The \textit{awk} command goes through each line of the \textit{monte\textunderscore carlo.dat} file, uses the condition "the fifth column equals 1" to filter out only the coordinates of blue points and outputs as a new file. This approach is also applied to red points with the condition "the fifth column equals 0."
+   \end{itemize}
+   \item \texttt{gnuplot <\!<END}
+   \begin{itemize}
+     \item Sent the following here-document to \texttt{gnuplot}.
+   \end{itemize}
+   \item \texttt{set terminal pdf}
+   \begin{itemize}
+     \item To save the plots as pdf format.
+   \end{itemize}
+   \item \texttt{set output "pi\textunderscore dot.pdf"}
+   \begin{itemize}
+     \item Set output name.
+   \end{itemize}
+   \item \texttt{set size square}
+   \begin{itemize}
+     \item Set the output plot as square.
+   \end{itemize}
+   \item \texttt{$f(x) = sqrt(1\; -\; x**2)$}
+   \begin{itemize}
+     \item Define the equation of the one-quarter circle.
+   \end{itemize}
+   \item \texttt{plot "blue\textunderscore dots.dat" with dots title "" lt rgb "blue", }
+   \begin{itemize}
+     \item To plot the blue dots with no title.
+   \end{itemize}
+   \item \texttt{f(x) with lines title "" lt rgb "#000000"}
+   \begin{itemize}
+     \item To plot the one quarter circle with no title.
+   \end{itemize}
+ \end{itemize}
+
+\section{Monte Carlo Error Estimation}
+
+This plot shows the difference between the estimated $\pi$ and "true" $\pi$ as iteration increases under different seeds for the random number generator. As iteration increases, the error between the estimated $\pi$ and "true" $\pi$ becomes smaller and smaller, and approaches zero. \\
+\\
+Bash script used to generate the plot: \\
+\begin{verbatim}
+for i in {0..5}
+    do
+            num=$RANDOM
+            ./monte_carlo -n 20000 -r $num | tail -n +2 \
+            | awk ' {print $1, ('$pi'-$2)} ' > mc_err_${i}.dat
+    done
+
+gnuplot <<END
+    set terminal pdf
+    set output "mc_error.pdf"
+    set yrange [-1:1]
+    set xrange [1:20000]
+    set logscale x 2
+    set title "Monte Carlo Error Estimation"
+    set ylabel "Error"
+    set grid xtics ytics
+    plot "mc_err_0.dat" with lines title "" lt rgb "#FF6666", \
+        "mc_err_1.dat" with lines title "" lt rgb "#FFB2666", \
+        "mc_err_2.dat" with lines title "" lt rgb "#00CC66", \
+        "mc_err_3.dat" with lines title "" lt rgb "#3399FF", \
+        "mc_err_4.dat" with lines title "" lt rgb "#CC99FF", \
+        "mc_err_5.dat" with lines title "" lt rgb "#99004C"
+END
+
+\end{verbatim}
+
+\includepdf[pages=-,pagecommand={},width=\textwidth]{mc_error.pdf}
+
+\section{Command Used and Discussion}
+
+\begin{itemize}
+   \item \texttt{pi=`echo "4*a(1)" | bc -l`}
+   \begin{itemize}
+     \item The \texttt{bc} command with the option \texttt{- l} is used for calculation with the standard math library. In the math library, $a(x)$ is for the arctangent of x, and the returned arctangent is in radians. Since the arctangent of 1 is $\pi /4$ radians, the expression $4*a(1)$ gives the value of $\pi$. Therefore, the value of $\pi$ can be printed in a shell script by passing the expression $4*a(1)$ as standard input to \texttt{bc}.
+   \end{itemize}
+   \item \texttt{for i in \{0..5\}; do num=\$RANDOM; $./monte\textunderscore carlo\; -n\; 20000\; -r\; \$num\; | tail\; -n\; +2\;$ | awk ' {print \$1, ('\$pi'-\$2)} ' > mc\textunderscore err\textunderscore \${i}.dat; done}
+   \begin{itemize}
+     \item I use a for loop from 0 to 5 to implement six estimation results using six different random seeds. In each implementation, a random seed is set as \textit{num} and passed to the seed option of \texttt{monte\textunderscore carlo} program as a deterministic random starting point. The option of the number of points for estimation is set to 20000 to get enough iteration to show the change of the errors. The \textit{tail} command with \textit{-n +2} output starts with line 2, meaning trimming the header line. The output is piped to \textit{awk}. The \textit{awk} command goes through each line of the previous output, and prints the first column and the calculation of error (the defined $\pi$ minus the estimated $\pi$ in the second column). The final output is redirected to a new file named by each seed implementation.
+   \end{itemize}
+   \item \texttt{gnuplot <\!<END}
+   \begin{itemize}
+     \item Sent the following here-document to \texttt{gnuplot}.
+   \end{itemize}
+   \item \texttt{set terminal pdf}
+   \begin{itemize}
+     \item To save the plots as pdf format.
+   \end{itemize}
+   \item \texttt{set output "mc\textunderscore error.pdf"}
+   \begin{itemize}
+     \item Set output name.
+   \end{itemize}
+   \item \texttt{set yrange [-1:1]}
+   \begin{itemize}
+     \item Set the limit of $y$ axis to be in the range [-1:1].
+   \end{itemize}
+   \item \texttt{set xrange [1:20000]}
+   \begin{itemize}
+     \item Set the limit of $x$ axis to be in the range [1:20000] because the \texttt{monte\textunderscore carlo} iteration number is 20000.
+   \end{itemize}
+   \item \texttt{set logscale x 2}
+   \begin{itemize}
+     \item This command set the x axis to logscale base 2 as the original sample plot, making it easier to see the error change.
+   \end{itemize}
+   \item \texttt{set title "Monte Carlo Error Estimation"}
+   \begin{itemize}
+     \item Set the plot title.
+   \end{itemize}
+   \item \texttt{set ylabel "Error"}
+   \begin{itemize}
+     \item Set the label of $y$ axis to explain the plot.
+   \end{itemize}
+   \item \texttt{set grid xtics ytics}
+   \begin{itemize}
+     \item Set the gridlines so that it's easier to tell the scale of error changes.
+   \end{itemize}
+   \item \texttt{ plot "mc\textunderscore err\textunderscore 0.dat" with lines title "" lt rgb "#FF6666",}
+   \begin{itemize}
+     \item To plot the output of six files as lines with different colors and no titles.
+   \end{itemize}
+ \end{itemize}
+
+\section{Conclusions}
+
+In this assignment, I learned how to write a bash script and use \texttt{gnuplot} to produce sufficient plots to demonstrate mathematical concepts. I also gained more insight into the Monte Carlo method and the estimation of $\pi$. Some commands definitely became handy to me, including \texttt{awk}, \texttt{head}, \texttt{tail}, \texttt{for} loop, and file redirection. I also practiced explaining my thoughts and logic more thoroughly by writing and editing my design and writeup documents. 
+\end{document}
+
+

@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 1}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Program}
+
+The purpose of this program is to produce plots using \texttt{gnuplot} 
+based on the \texttt{C} program provided in the class resources repository. \\
+\\
+The provided \texttt{C} program first produces uniformly scattered points in a square with an inscribed quadrant and then measures the number of points that fall within the quadrant and out of the quadrant. The ratio of the number of points in the quadrant to the number of points in the square can be used to estimate $\pi$. After each random point, it tests, the \texttt{C} program will output the current iteration, the estimated value of $\pi$ of the current point, its $x$ and $y$ coordinates, and a $1$ or $0$ value indicating if it is in the circle, where $1$ means it is inside the circle. \\
+\\
+The first plot (\textit{Figure 2}) will demonstrate the uniformly scattered points in a square and inscribed quadrant. The points in the quadrant have a distance less than or equal to 1 and are blue. And the points that are a part of the square but not the circle will be red. \\
+\\
+The second plot (\textit{Figure 3}) will show the difference between the estimated $\pi$ and "true" $\pi$ as iteration increases under different seeds for the random number generator. \\
+
+\section{Files To Be Included in Directory \textit{asgn1}}
+
+\begin{itemize}
+   \item \texttt{plot.sh}
+   \begin{itemize}
+     \item Bash script that produces the Monte Carlo method plots 
+   \end{itemize}
+   \item \texttt{monte-carlo.c}
+   \begin{itemize}
+     \item A \texttt{C} program that implements Monte Carlo method to estimate $\pi$
+     \item Used in the \texttt{plot.sh} bash script to produce plots
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item The file that directs the compilation process of the Monte Carlo program
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use the bash script and \texttt{Makefile}
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for the bash script
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Include the plots that are produced using the bash script
+     \item Include a discussion on the UNIX commands used to produce each plot and the reasons to use them
+   \end{itemize}
+ \end{itemize}
+
+\section{Design Process}
+
+I took inspiration from the example script producing the plot of $y = sin(x)$. The idea is first to generate files containing data required for both plots, and write the \textit{here-document} sent to \texttt{gnuplot} to produce the plots based on the data files. \\
+\\
+Therefore, there will be four steps in my design: (1) data generation of \textit{Figure 2} (2) data generation of \textit{Figure 3} (3) plot \textit{Figure 2} using \texttt{gnuplot} (4) plot \textit{Figure 3} using \texttt{gnuplot}. \\
+\\
+The data needed to plot \textit{Figure 2} will be stored in one file and separated into two files, while data needed to plot \textit{Figure 3} will be in six files. Because The different lines with different colors in \textit{Figure 3} represent the results of different seeds for the random number generator. \\
+
+\section{Design/Structure}
+
+REBUILD $monte\_carlo$ \\
+\\
+./$monte\_carlo$ SET number of points for estimation | trim first 2 rows > file(a) \\
+\\
+IF column 5 in file(a) == 1 \\
+\indent PRINT column 3, column 4 > file(b) \\
+ELSE \\
+\indent PRINT column 3, column 4 > file(c) \\
+END IF \\
+\\
+SET \texttt{pi} to a constant\\
+\\
+FOR $i = 0$ to $5$ \\
+\indent SET \texttt{num} as a random seed \\
+\indent SET ./$monte\_carlo$ SET number of points for estimation and SET random seed \texttt{num} | trim first 2 rows | OBTAIN column 1, (\texttt{pi} - column 2) > file(i) \\
+END FOR \\
+\\
+\texttt{gnuplot} \\
+\indent SET plot as pdf \\
+\indent SET output name for \textit{Figure 2} \\
+\indent SET plot size \\
+\indent SET formula of the quadrant \\
+\indent PLOT file(b) as blue points \\
+\indent PLOT file(c) as red points \\
+\indent PLOT the line of the quadrant \\
+END \texttt{gnuplot} \\
+\\
+\texttt{gnuplot} \\
+\indent SET plot as pdf \\
+\indent SET output name for \textit{Figure 3} \\
+\indent SET range of x axis \\
+\indent SET range of y axis \\
+\indent SET plot title \\
+\indent SET y lable \\
+\indent PLOT file(0)-(5) with different colors \\
+END \texttt{gnuplot} \\
+\\
+
+\section{Credit}
+
+\begin{itemize}
+  \item The general concept and format of the design took reference from the \texttt{plot.sh} example in the \texttt{asgn1.pdf}
+  \item Some ideas, like how to use \texttt{awk} and general idea of making \textit{Figure 3}, came from reading people's discussion on Discord
+  \item Official Gnuplot online documentation Version 5.4
+\end{itemize}
+\end{document}

@@ -1,0 +1,37 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath, hyperref}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Challenges on Implementing Game of Life}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Opaque struct}
+
+The first challenge of this assignment was definitely to understand and implement the concept of an opaque struct. Though I thought I got the idea of indirectly interacting with the \textit{Universe} struct, I still got errors when compiling. One reason was that I didn't figure out uv\_create() function returned a pointer to a \textit{Universe}, since in \textit{life.c} we could only access an \textit{Universe} through a pointer. The other reason was that I made some helper functions in \textit{life.c} but tried to directly access the \textit{Universe} struct and functions in \textit{universe.c}. I fixed these errors by creating pointers to \textit{Universe} and wrote my helper functions in \textit{universe.c}. Also, I declare my added functions at the beginning of \textit{life.c} because they were not included in the header file \textit{universe.h}.
+
+I definitely gained more understanding of the concept of an opaque struct, and am pretty confident that I can apply it to other projects.
+
+\section{File Input/ File Output}
+
+This assignment provides an opportunity for me to get familiar with the usage of input/output file stream, especially on \textit{fscanf()} and \textit{fprintf()}. After reading the \textit{C} textbook, I was still confused about how \textit{fscanf()} read in files. Should it be line by line or character by character? After researching, I can not distinguish the usage of \textit{fscanf()}, \textit{scanf()} and \textit{sscanf()}. I also got more comfortable with handling STDIN and STDOUT and manipulating them and files. 
+
+\section{Where A Variable Should Be Declared}
+
+I was stuck on errors like "unused variable 'uni\_A'" and "use of undeclared identifier 'uni\_A'" for a while. Then I figured out that it was a very basic but easily ignored (or only by me) mistake. I declared the variables in the block of IF statement so that the assignment won't stay after the IF block ends. I believe I will always remember this after getting stuck for so long.
+
+\section{Dynamic Memory Allocation for A Struct and Matrix}
+
+The implementation of function \textit{uv\_create()} gave the chance to figure out using \textit{calloc()} to dynamically allocate memory for the \textit{Universe} stuct and the grid in an \textit{Universe}. At first I just blindly followed the instruction to build matrix for grid in \textit{uv\_create()} without even noticing that I need to allocate memory for a struct and return a pointer. I didn't realized something's wrong until I got the error saying, "variable has incomplete type 'Universe'". Because my \textit{Universe} instance in \textit{life.c} was not a pointer to an \textit{Universe}. I was glad that I finally fixed it after some hints from the TAs and doing some research.
+
+\section{Use of \textit{ncurses} Library}
+
+The \textit{ncurses} library was a totally new thing to me. Although for this assignment we could just follow the example code provided in the assignment specifics, I still got the chance to play around with some features that I can do on the screen, like changing the time for sleep, \textit{printw()}, \textit{mvprintw()}, \textit{attron()}, and playing with colors and patterns. 
+
+\section{Modular Arithmetic}
+
+I was stuck for modular arithmetic for a while after I got "Segmentaion Fault" when running \textit{life} in toroidal mode. The mistake resulted from me mixing the concept of mathematical modulo (\%) and modulo in \textit{C}. For negative numbers, the calculation of these two concepts are so different. $a \% b$ in \textit{C} is a remainder operation and not a modulo operation. According to the C99 Specification: $a == (a / b) * b + a \% b$, which make the operation of negative numbers different from simply $a \% b$.
+
+
+\end{document}

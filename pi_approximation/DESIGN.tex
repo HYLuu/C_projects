@@ -1,0 +1,364 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 2}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Programs}
+
+There are seven \texttt{C} programs. Six of them are implementation of different mathematical formulas which are used to compute the fundamental constants \textit{e} and $\pi$. The \texttt{mathlib-test.c} is a test harness that compares the created implemented functions with that of the math library’s.
+
+\section{Files To Be Included in Directory \textit{asgn2}}
+
+\begin{itemize}
+   \item \texttt{newton.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the square root approximation using Newton’s method and the other returns the number of computed iterations
+   \end{itemize}
+   \item \texttt{e.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the Taylor series to approximate Euler’s number \textit{e} and the other returns the number of computed terms
+   \end{itemize}
+   \item \texttt{madhava.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the Madhava series to approximate $\pi$ and the other returns the number of computed terms
+   \end{itemize}
+   \item \texttt{euler.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the Euler’s solution to approximate $\pi$ and the other returns the number of computed terms.
+   \end{itemize}
+   \item \texttt{bbp.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the Bailey-Borwein-Plouffe formula to approximate $\pi$ and the other returns the number of computed terms.
+   \end{itemize}
+   \item \texttt{viete.c}
+   \begin{itemize}
+     \item This file contains two functions. One implements the Viète’s formula to approximate $\pi$ and the other returns the number of computed factors.
+   \end{itemize}
+   \item \texttt{mathlib-test.c}
+   \begin{itemize}
+     \item The program with the main() function which tests each of created math library functions by allowing command-line options
+   \end{itemize}
+   \item \texttt{mathlib.h}
+   \begin{itemize}
+     \item The header file that contains the interface of the created math library (the above programs) 
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item This file taht compiles the math library programs and builds the \texttt{mathlib-test} executable
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use all the programs and \texttt{Makefile}, including explanations on command-line options
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for all the proigrams
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Include the graphs that displays the difference between the values reported by the created math functions and that of the math library’s
+     \item Include analysis and explanations for any discrepancies and findings on the testing of created math library
+   \end{itemize}
+ \end{itemize}
+
+\section{Design Process}
+
+Since there is a function to return the number of computed terms in each small program, I set the \texttt{static} counter in the beginning. According to each formula, different $x$ or $y$ variables are defined to represent $k$ in the formulas or the previous value of power $k-1$. The calculation in the WHILE loop will continue until the difference between previous value (last) and current value (current) is smaller than EPSILON. \\
+\\
+For the \texttt{mathlib-test.c} program, I first create function for each small approximation program. In each function, an integer \textit{k} is used to control whether the function prints only the line of number of iterations. A \textit{usage} function is created and used to print program synopsis and usage. The \textit{main} function first checks the arguments. It prints program synopsis and usage if there is no argument. I then use a integer \textit{present} to represent the existence of argument "-s". If "-s" exists, all the \textit{k} will be set to 1 and will print the requested test results and their numbers of iterations. Otherwise, all the \textit{k} will be set to 1 and print only the requested test result lines. \\
+
+\section{Design/Structure}
+
+(1) \texttt{newton.c} \\
+\\
+SET counter to 0 \\
+\\
+function sqrt\_newton(x) \\
+\indent SET $s \leftarrow 1$ , $y \leftarrow 1$, $z \leftarrow 0$ \\
+\indent WHILE $x > 4$ do \\
+\indent \indent $x \leftarrow x / 4$ \\
+\indent \indent $s \leftarrow s \times 2$ \\
+\indent END WHILE \\
+\indent WHILE $| y - z | >$ EPSILON do \\
+\indent \indent $z \leftarrow y$ \\
+\indent \indent $y \leftarrow \frac{1}{2} (y + \frac{x}{y})$  \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN s $\times$ y \\
+END function \\
+\\
+\\
+function sqrt\_newton\_iters() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(2) \texttt{e.c} \\
+\\
+SET counter to 0 \\
+\\
+function e() \\
+\indent SET $x \leftarrow 1$ , $y \leftarrow 1$, $last \leftarrow 0$, $current \leftarrow 1$ \\
+\indent WHILE $| current - last | >$ EPSILON do \\
+\indent \indent last $\leftarrow$ current \\
+\indent \indent current $\leftarrow$ current + $\frac{1}{x \times y}$ \\
+\indent \indent y $\leftarrow x \times y$ \\
+\indent \indent x $\leftarrow$ x + 1 \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN current \\
+END function \\
+\\
+\\
+function e\_terms() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(3) \texttt{madhava.c} \\
+\\
+SET counter to 0 \\
+\\
+function pi\_madhava() \\
+\indent SET $x \leftarrow 1$ , $y \leftarrow 1$, $last \leftarrow 0$, $current \leftarrow 1$ \\
+\indent WHILE $| current - last | >$ EPSILON do \\
+\indent \indent last $\leftarrow$ current \\
+\indent \indent current $\leftarrow$ current + $\frac{1}{2 \times x + 1} \times y \times \frac{1}{-3}$ \\
+\indent \indent y $\leftarrow y \times \frac{1}{-3}$ \\
+\indent \indent x $\leftarrow$ x + 1 \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN current $\times \sqrt{12}$ \\
+END function \\
+\\
+\\
+function pi\_madhava\_terms() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(4) \texttt{euler.c} \\
+\\
+SET counter to 0 \\
+\\
+function pi\_euler() \\
+\indent SET $x \leftarrow 2$ , $last \leftarrow 0$, $current \leftarrow 1$ \\
+\indent WHILE $| current - last | >$ EPSILON do \\
+\indent \indent last $\leftarrow$ current \\
+\indent \indent current $\leftarrow$ current + $\frac{1}{x \times x} $ \\
+\indent \indent x $\leftarrow$ x + 1 \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN $\sqrt{current \times 6}$ \\
+END function \\
+\\
+\\
+function pi\_euler\_terms() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(5) \texttt{bbp.c} \\
+\\
+SET counter to 0 \\
+\\
+function pi\_bbp() \\
+\indent SET $x \leftarrow 1$ , $y \leftarrow 1$, $last \leftarrow 0$, $current \leftarrow 4 - \frac{1}{2} - \frac{1}{5} - \frac{1}{6}$ \\
+\indent WHILE $| current - last | >$ EPSILON do \\
+\indent \indent last $\leftarrow$ current \\
+\indent \indent current $\leftarrow$ current + $y \times \frac{1}{16} \times (\frac{4}{8x + 1} - \frac{2}{8x + 4} - \frac{1}{8x + 5}- \frac{1}{8x + 6})$ \\
+\indent \indent y $\leftarrow y \times \frac{1}{16}$ \\
+\indent \indent x $\leftarrow$ x + 1 \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN current \\
+END function \\
+\\
+\\
+function pi\_bbp\_terms() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(6) \texttt{viete.c} \\
+\\
+SET counter to 0 \\
+\\
+function pi\_viete() \\
+\indent SET $x \leftarrow \sqrt{2}$ , $last \leftarrow 0$, $current \leftarrow \frac{\sqrt{2}}{2}$ \\
+\indent WHILE $| current - last | >$ EPSILON do \\
+\indent \indent last $\leftarrow$ current \\
+\indent \indent current $\leftarrow$ current $\times \frac{\sqrt{2 + x}}{2}$ \\
+\indent \indent x $\leftarrow \sqrt{2 + x}$ \\
+\indent \indent counter $\leftarrow$ counter + 1 \\
+\indent END WHILE \\
+\indent RETURN $\frac{1}{\frac{current}{2}}$ \\
+END function \\
+\\
+\\
+function pi\_viete\_factors() \\
+\indent RETURN counter \\
+END function \\
+\\
+\\
+(7) \texttt{mathlib-test.c} \\
+\\
+DEFINE command-line options "aebmrvnsh" \\
+\\
+function usage(program) \\
+\indent print(program synopsis and usage) \\
+END function \\
+\\
+\\
+M\_PI $\leftarrow$ $\pi$ constant value in \textit{math.h} \\
+M\_E $\leftarrow$ \textit{e} constant value in \textit{math.h} \\
+\\
+function get\_e(k) \\
+\indent IF k = 1 \\
+\indent \indent PRINT e() output, M\_E, difference \\
+\indent ELSE \\
+\indent \indent PRINT e() output, M\_E, difference \\
+\indent \indent PRINT e\_terms() output \\
+END function \\
+\\
+\\
+function get\_m(k) \\
+\indent IF k = 0 \\
+\indent \indent PRINT madhava() output, M\_PI, difference \\
+\indent ELSE \\
+\indent \indent PRINT madhava() output, M\_PI, difference \\
+\indent \indent PRINT madhava\_terms() output \\
+END function \\
+\\
+\\
+function get\_r(k) \\
+\indent IF k = 0 \\
+\indent \indent PRINT euler() output, M\_PI, difference \\
+\indent ELSE \\
+\indent \indent PRINT euler() output, M\_PI, difference \\
+\indent \indent PRINT euler\_terms() output \\
+END function \\
+\\
+\\
+function get\_r(k) \\
+\indent IF k = 0 \\
+\indent \indent PRINT euler() output, M\_PI, difference \\
+\indent ELSE \\
+\indent \indent PRINT euler() output, M\_PI, difference \\
+\indent \indent PRINT euler\_terms() output \\
+END function \\
+\\
+\\
+function get\_b(k) \\
+\indent IF k = 0 \\
+\indent \indent PRINT bbp() output, M\_PI, difference \\
+\indent ELSE \\
+\indent \indent PRINT bbp() output, M\_PI, difference \\
+\indent \indent PRINT bbp\_terms() output \\
+END function \\
+\\
+\\
+function get\_v(k) \\
+\indent IF k = 0 \\
+\indent \indent PRINT viete() output, M\_PI, difference \\
+\indent ELSE \\
+\indent \indent PRINT viete() output, M\_PI, difference \\
+\indent \indent PRINT viete\_terms() output \\
+END function \\
+\\
+\\
+function get\_n(k) \\
+\indent IF k = 0 \\
+\indent \indent FOR i = 1 to 10, move 0.1 each time \\
+\indent \indent \indent PRINT sqrt\_newton() output, sqrt() output, difference \\
+\indent \indent END FOR \\
+\indent ELSE \\
+\indent \indent FOR i = 1 to 10, move 0.1 each time \\
+\indent \indent \indent PRINT sqrt\_newton() output, sqrt() output, difference \\
+\indent \indent \indent PRINT viete\_terms() output \\
+\indent END IF \\
+END function \\
+\\
+\\
+function main(argument) \\
+\indent SET present $\leftarrow 0$ \\
+\\
+\indent IF no argument \\
+\indent \indent usage() \\
+\indent END IF \\
+\\
+\indent FOR each read-in argument \\
+\indent \indent IF argument == "-s" \\
+\indent \indent \indent present $\leftarrow 1$ \\
+\indent \indent END IF \\
+\indent END FOR \\
+\\
+\indent IF present == 1 \\
+\indent \indent WHILE there is at least an argument \\
+\indent \indent \indent SWITCH argument \\
+\indent \indent \indent \indent case argument "e" do get\_e(1) \\
+\indent \indent \indent \indent case argument "r" do get\_r(1) \\
+\indent \indent \indent \indent case argument "b" do get\_b(1) \\
+\indent \indent \indent \indent case argument "m" do get\_m(1) \\
+\indent \indent \indent \indent case argument "v" do get\_v(1) \\
+\indent \indent \indent \indent case argument "n" do get\_n(1) \\
+\indent \indent \indent \indent case argument "a" do \\
+\indent \indent \indent \indent \indent get\_e(1) \\
+\indent \indent \indent \indent \indent get\_r(1) \\
+\indent \indent \indent \indent \indent get\_b(1) \\
+\indent \indent \indent \indent \indent get\_m(1) \\
+\indent \indent \indent \indent \indent get\_v(1) \\
+\indent \indent \indent \indent \indent get\_n(1) \\
+\indent \indent \indent \indent case argument "s" do \\
+\indent \indent \indent \indent \indent IF there is only one argument \\
+\indent \indent \indent \indent \indent \indent usage() \\
+\indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent break \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent case argument "h" do usage() \\
+\indent \indent \indent \indent default do usage() \\
+\indent \indent \indent \indent \indent return EXIT\_FAILURE \\
+\indent \indent \indent END SWITCH \\
+\indent \indent END WHILE \\
+\indent ELSE \\
+\indent \indent WHILE there is at least an argument \\
+\indent \indent \indent SWITCH argument \\
+\indent \indent \indent \indent case argument "e" do get\_e(0) \\
+\indent \indent \indent \indent case argument "r" do get\_r(0) \\
+\indent \indent \indent \indent case argument "b" do get\_b(0) \\
+\indent \indent \indent \indent case argument "m" do get\_m(0) \\
+\indent \indent \indent \indent case argument "v" do get\_v(0) \\
+\indent \indent \indent \indent case argument "n" do get\_n(0) \\
+\indent \indent \indent \indent case argument "a" do \\
+\indent \indent \indent \indent \indent get\_e(0) \\
+\indent \indent \indent \indent \indent get\_r(0) \\
+\indent \indent \indent \indent \indent get\_b(0) \\
+\indent \indent \indent \indent \indent get\_m(0) \\
+\indent \indent \indent \indent \indent get\_v(0) \\
+\indent \indent \indent \indent \indent get\_n(0) \\
+\indent \indent \indent \indent case argument "s" do \\
+\indent \indent \indent \indent \indent IF there is only one argument \\
+\indent \indent \indent \indent \indent \indent usage() \\
+\indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent break \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent case argument "h" do usage() \\
+\indent \indent \indent \indent default do usage() \\
+\indent \indent \indent \indent \indent return EXIT\_FAILURE \\
+\indent \indent \indent END SWITCH \\
+\indent \indent END WHILE \\
+\indent END IF \\
+END function \\
+\\
+\section{Credit}
+
+\begin{itemize}
+  \item Implementation in \texttt{newton.c} was inspired and rewrited from the python code in the assignment specification pdf, and the \texttt{indirect.c} program provided by Dr. Long
+  \item The command-line option use took reference from \texttt{monte\_carlo.c} program
+\end{itemize}
+\end{document}

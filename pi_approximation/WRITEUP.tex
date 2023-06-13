@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath, pdfpages, graphicx}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Analysis on Approximation of Irrational Numbers}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Calculating \textit{Euler’s number}}
+
+\textit{mathlib-test} Output:
+\begin{verbatim}
+e() = 2.718281828459046, M_E = 2.718281828459045, diff = 0.000000000000000
+e() terms = 34
+\end{verbatim}
+\includegraphics[height=0.4\textheight]{e_apprx.pdf}
+
+\section{Calculating $\pi$ using Madhava series}
+\textit{mathlib-test} Output:
+\begin{verbatim}
+pi_madhava() = 3.141592653589800, M_PI = 3.141592653589793, diff = 0.000000000000007
+pi_madhava() terms = 52
+\end{verbatim}
+\includegraphics[height=0.4\textheight]{madhava_apprx.pdf}
+
+\section{Calculating $\pi$ using Euler’s Solution} 
+\textit{mathlib-test} Output:
+\begin{verbatim}
+pi_euler() = 3.141592557608133, M_PI = 3.141592653589793, diff = 0.000000095981660
+pi_euler() terms = 19897758
+\end{verbatim}
+\includegraphics[height=0.4\textheight]{euler_apprx.pdf}
+
+\section{Calculating $\pi$ using the Bailey-Borwein-Plouffe Formula}
+\textit{mathlib-test} Output:
+\begin{verbatim}
+pi_bbp() = 3.141592653589793, M_PI = 3.141592653589793, diff = 0.000000000000000
+pi_bbp() terms = 20
+\end{verbatim}
+\includegraphics[height=0.4\textheight]{bbp_apprx.pdf}
+
+\section{Calculating $\pi$ using Viète’s Formula}
+\textit{mathlib-test} Output:
+\begin{verbatim}
+pi_viete() = 3.141592653589789, M_PI = 3.141592653589793, diff = 0.000000000000004
+pi_viete() terms = 46
+\end{verbatim}
+\includegraphics[height=0.4\textheight]{viete_apprx.pdf}
+
+\section{Discussion}
+
+In all the math implementations of calculating $\pi$, Euler’s Solution converges very slowly using 19897758 iterations, while other methods converge in around 30 to 50 iterations. This could result from the summation of the reciprocals of the squares of the natural numbers. Since the values of the reciprocals of the squares of the natural numbers decrease rapidly, the changes between each iteration are so little. Compared to the $\pi$ constant from the \texttt{math.h} library, there is a difference of 0.000000095981660. This is the biggest difference among all the $\pi$ approximation methods. The difference may have something to do with the square root calculation in the end.\\
+\\
+The approximation results of Madhava series and Viète’s Formula both show a small difference compared to the $\pi$ constant from the \texttt{math.h} library, while Bailey-Borwein-Plouffe Formula shows $0.000000000000000$ difference. Similarly, since newton square root function was used in Madhava series and Viète’s Formula, the slightly higher difference could come from the approximated newton square root method. \\
+\\
+In Newton’s method to approximate the square root, I received difference of $0.000000000000000$ for all the number tested except for $0.000000$. The result of $0.000000$ : \\
+\begin{verbatim}
+sqrt_newton(0.000000) = 0.000000000000007, sqrt(0.000000) = 0.000000000000000, 
+diff = 0.000000000000007
+sqrt_newton() terms = 694
+\end{verbatim} 
+It's confusing that the square root of $0.000000$ is $0.000000000000007$. The resolution of floating point numbers might be able to explain this. $0.000000$ might not contain all $0$ in the further digits but it won't show as a readable message to us. \\
+
+\section{Conclusion}
+
+After Assignment 1, this assignment again focuses on the floating point number approximation. After this implementation, I understood how approximation and floating point numbers work. The technique of building and using our own math library is also handy. I became more familiar with the logic and structure and the related commands.
+
+\end{document}

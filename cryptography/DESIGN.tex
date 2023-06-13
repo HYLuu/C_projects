@@ -1,0 +1,514 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath, hyperref}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 5}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Programs}
+
+The three main program will be the implementation of public key cryptography using Schmidt-Samoa (SS) algorithm. The \texttt{keygen.c} is a key generator that produces SS public and private key pairs. The \texttt{encrypt.c} program is an encryptor that encrypts files using a public key, while the \texttt{decrypt.c} program decrypts the encrypted files using the corresponding private key. \\
+\\
+The \texttt{randstate.c} contains the implementation of a random state module. The \texttt{numtheory.c} program contains the implementations of the number theory functions behind SS. The \texttt{ss.c} contains implementations of routines for SS. The above libraries and module will be used in the three main programs. \\
+\section{Files To Be Included in Directory \textit{asgn3}}
+
+\begin{itemize}
+   \item \texttt{decrypt.c}
+   \begin{itemize}
+     \item This file contains the implementation and main() function for the \texttt{decrypt} program.
+   \end{itemize}
+   \item \texttt{encrypt.c}
+   \begin{itemize}
+     \item This file contains the implementation and main() function for the \texttt{encrypt} program.
+   \end{itemize}
+   \item \texttt{keygen.c}
+   \begin{itemize}
+     \item This file contains the implementation and main() function for the \texttt{keygen} program.
+   \end{itemize}
+   \item \texttt{numtheory.c and numtheory.h}
+   \begin{itemize}
+     \item The \texttt{numtheory.c} includes the implementations of the number theory functions.
+     \item The \texttt{numtheory.h} specifies the interface of the number theory functions.
+   \end{itemize}
+   \item \texttt{randstate.c and randstate.h}
+   \begin{itemize}
+     \item The \texttt{randstate.c} includes the implementations of the random state interface for the SS library and number theory functions. 
+     \item The \texttt{randstate.h} specifies the interface for initializing and clearing the random state.
+   \end{itemize} 
+   \item \texttt{ss.c and ss.h}
+   \begin{itemize}
+     \item The \texttt{ss.c} includes the implementations of the SS library. 
+     \item The \texttt{ss.h} specifies the interface for the SS library.
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item This file compiles the programs and builds the \texttt{encrypt}, \texttt{decrypt}, and \texttt{keygen} executables.
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use all the programs and \texttt{Makefile}, including explanations on command-line options
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for all the programs
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Things learned in this assignment in detail
+     \item discussion on the applications of public-private cryptography and how it influences the world today
+   \end{itemize}
+ \end{itemize}
+
+\section{Design/Structure of \texttt{randstate.c}}
+
+\underline{void randstate\_init(uint64\_t seed)} \\
+\indent Initializes the global random \texttt{state} \\
+\indent Set initial seed to \texttt{state} \\
+\\
+\underline{void randstate\_clear(void)} \\
+\indent Free all memory occupied by \texttt{state} \\
+\\
+\section{Design/Structure of \texttt{numtheory.c}}
+
+\underline{bool is\_odd(mpz\_t d)} \\
+\indent \textbf{initialize} mpz\_t x, o \\
+\indent x $\leftarrow$ 1 \\
+\indent o $\leftarrow$ d \& x \\
+\indent \textbf{if}  o == 1 \\
+\indent \indent Free the mpz\_t variables \\
+\indent \indent \textbf{return} true \\
+\indent \textbf{else} \\
+\indent \indent Free the mpz\_t variables \\
+\indent \indent \textbf{return} false \\
+\\
+\underline{bool is\_even(mpz\_t d)} \\
+\indent \textbf{initialize} mpz\_t x, o \\
+\indent x $\leftarrow$ 1 \\
+\indent o $\leftarrow$ d \& x \\
+\indent \textbf{if}  o == 0 \\
+\indent \indent Free the mpz\_t variables \\
+\indent \indent \textbf{return} true \\
+\indent \textbf{else} \\
+\indent \indent Free the mpz\_t variables \\
+\indent \indent \textbf{return} false \\
+\\
+\underline{void gcd(mpz\_t g, mpz\_t a, mpz\_t b)} \\
+\indent \textbf{initialize} mpz\_t t \\
+\indent \textbf{while} b not 0 \\
+\indent \indent t $\leftarrow$ a \\
+\indent \indent a $\leftarrow$ b \\
+\indent \indent b $\leftarrow$ t \% b \\
+\indent g $\leftarrow$ a \\
+\indent Free the mpz\_t variables \\
+\\
+\underline{void mod\_inverse(mpz\_t o, mpz\_t a, mpz\_t n)} \\
+\indent \textbf{initialize} mpz\_t r, rP, t, tP, q, tmp, qrP, qtP \\
+\indent r $\leftarrow$ n \\
+\indent rP $\leftarrow$ a \\
+\indent tP $\leftarrow$ 1 \\
+\indent \textbf{while} rP not 0 \\
+\indent \indent q $\leftarrow$ r / rP \\
+\indent \indent tmp $\leftarrow$ rP \\
+\indent \indent qrP $\leftarrow$ q $\times$ rP \\
+\indent \indent rP $\leftarrow$ r - qrP \\
+\indent \indent r $\leftarrow$ tmp \\
+\indent \indent tmp $\leftarrow$ tP \\
+\indent \indent qtP $\leftarrow$ q $\times$ tP \\
+\indent \indent tP $\leftarrow$ t - qtP \\
+\indent \indent t $\leftarrow$ tmp \\
+\indent \textbf{if} r > 1 \\
+\indent \indent \textbf{return} 0 \\
+\indent \textbf{else} \\
+\indent \indent \textbf{if} t < 0 \\
+\indent \indent \indent o $\leftarrow$ t + n \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent o $\leftarrow$ t \\
+\indent Free the mpz\_t variables \\
+\\
+\underline{void pow\_mod(mpz\_t o, mpz\_t a, mpz\_t d, mpz\_t n)} \\
+\indent \textbf{initialize} mpz\_t v, p, vp, pp \\
+\indent v $\leftarrow$ 1 \\
+\indent p $\leftarrow$ a \\
+\indent \textbf{while} d > 0 \\
+\indent \indent \textbf{if} is\_odd(d) \\
+\indent \indent \indent vp $\leftarrow$ v $\times$ p \\
+\indent \indent \indent v $\leftarrow$ vp \% n \\
+\indent \indent pp $\leftarrow$ p $\times$ p \\
+\indent \indent p $\leftarrow$ pp \% n \\
+\indent o $\leftarrow$ v \\
+\indent Free the mpz\_t variables \\
+\\
+\underline{void get\_d\_r(mpz\_t d, mpz\_t r, mpz\_t n)} \\
+\indent d $\leftarrow$ n \\
+\indent r $\leftarrow$ 0 \\
+\indent \textbf{while} is\_even(d) \\
+\indent \indent d $\leftarrow$ d / 2 \\
+\indent \indent r $\leftarrow$ r + 1 \\
+\\
+\underline{bool witness(mpz\_t a, mpz\_t n)} \\
+\indent \textbf{initialize} mpz\_t d, r, x, y, k, l \\
+\indent get\_d\_r(d, r, n - 1) \\
+\indent pow\_mod(x, a, d, n) \\
+\indent \textbf{for} i = 0 to r-1 \\
+\indent \indent k $\leftarrow$ 2 \\
+\indent \indent pow\_mod(y, x, k, n) \\
+\indent \indent l $\leftarrow$  n - 1 \\
+\indent \indent \textbf{if} y == 1 and x not 1 and x not 0 \\
+\indent \indent \indent \textbf{retuen} true \\
+\indent \indent x $\leftarrow$ y \\
+\indent \indent \textbf{if} x not 1 \\
+\indent \indent \indent Free the mpz\_t variables \\
+\indent \indent \indent \textbf{retuen} true \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent Free the mpz\_t variables \\
+\indent \indent \indent \textbf{retuen} false \\
+\\
+\underline{bool is\_prime(mpz\_t n, uint64\_t iters)} \\
+\indent \textbf{initialize} mpz\_t md, a, nt \\
+\indent md $\leftarrow$ n \% 2 \\
+\indent nt $\leftarrow$ n - 1 \\
+\indent \textbf{if} n < 2 or (n != 2 and n \% 2 == 0) \\
+\indent \indent \textbf{return} false \\
+\indent \textbf{if} n == 2 or n == 3 \\
+\indent \indent \textbf{return} true \\
+\indent \textbf{for} i = 0 to iters - 1 \\
+\indent \indent a $\leftarrow$ randome mpz\_t integer in range [0, nt] \\
+\indent \indent a $\leftarrow$ a + 2 \\
+\indent \indent \textbf{if} witness(a, n) \\
+\indent \indent \indent \textbf{return} false \\
+\indent Free the mpz\_t variables \\
+\indent \textbf{return} true \\
+\\
+\underline{void make\_prime(mpz\_t p, uint64\_t bits, uint64\_t iters)} \\
+\indent \textbf{initialize} mpz\_t r, g, bt, tp \\
+\indent tp $\leftarrow$ 1 \\
+\indent \textbf{do} \\
+\indent \indent g $\leftarrow$ a random mpz\_t integer \\
+\indent \indent bt $\leftarrow$ tp << b \\
+\indent \indent bt $\leftarrow$ bt - 1 \\
+\indent \indent r $\leftarrow$ g \& bt \\
+\indent \textbf{while} not is\_prime(r, 50) \\
+\indent p $\leftarrow$ r \\
+\indent Free the mpz\_t variables \\
+\\
+\section{Design/Structure of \texttt{ss.c}}
+
+\underline{void ss\_make\_pub(mpz\_t p, mpz\_t q, mpz\_t n, uint64\_t nbits, uint64\_t iters)} \\
+\indent low $\leftarrow$ nbits / 5 \\
+\indent high $\leftarrow$ (2 $\times$ nbits) / 5 \\
+\indent p\_bit $\leftarrow$ random() \% (high - low) + low \\
+\indent q\_bit $\leftarrow$ nbits - 2 $\times$ p\_bit \\
+\indent make\_prime(p, p\_bit, iters) \\
+\indent make\_prime(q, q\_bit, iters) \\
+\indent \textbf{while} p == q or (q - 1) \% p == 0 or (p - 1) \% q == 0 \\
+\indent \indent make\_prime(q, q\_bit, iters) \\
+\indent n $\leftarrow$ p $\times$ p $\times$ q \\
+\\
+\underline{void ss\_make\_priv(mpz\_t d, mpz\_t pq, mpz\_t p, mpz\_t q)} \\
+\indent \textbf{initialize} mpz\_t p\_, q\_, g, ab, n \\
+\indent p\_ $\leftarrow$ p - 1 \\
+\indent q\_ $\leftarrow$ q - 1 \\
+\indent ab $\leftarrow$ p\_ $\times$ q\_ \\
+\indent gcd(g, p\_, q\_) \\
+\indent pq $\leftarrow$ ab / g \\
+\indent n $\leftarrow$ p $\times$ p $\times$ q \\
+\indent mod\_inverse(d, n, pq) \\
+\\
+\underline{void ss\_write\_pub(mpz\_t n, char username[], FILE *pbfile)} \\
+\indent gmp\_fprintf(print n to pbfile) \\
+\indent fprintf(print username to pbfile) \\
+\\
+\underline{void ss\_write\_priv(mpz\_t pq, mpz\_t d, FILE *pvfile)} \\
+\indent gmp\_fprintf(print pq to pbfile) \\
+\indent gmp\_fprintf(print d to pbfile) \\
+\\
+\underline{void ss\_read\_pub(mpz\_t n, char username[], FILE *pbfile)} \\
+\indent gmp\_fscanf(read pbfile and assign to n) \\
+\indent fscanf(read pbfile and assign to username) \\
+\\
+\underline{void ss\_read\_priv(mpz\_t pq, mpz\_t d, FILE *pvfile)} \\
+\indent gmp\_fscanf(read pvfile and assign to pq) \\
+\indent gmp\_fscanf(read pvfile and assign to d) \\
+\\
+\underline{void ss\_encrypt(mpz\_t c, mpz\_t m, mpz\_t n)} \\
+\indent c $\leftarrow$ $m^n$ \% n\\
+\\
+\underline{void ss\_encrypt\_file(FILE *infile, FILE *outfile, mpz\_t n)} \\
+\indent \textbf{initialize} mpz\_t k, m, c \\
+\indent k $\leftarrow$ ((log2(n) / 2) - 1) / 8 \\
+\indent *block $\leftarrow$ calloc(k, sizeof(uint8\_t)) \\
+\indent block[0] $\leftarrow$ 0xFF \\
+\indent \textbf{if} (Read at most k - 1 bytes in from infile into block starting block[1]) \\
+\indent \indent mpz\_import(convert the read bytes into m) \\
+\indent \indent ss\_encrypt(c, m, n) \\
+\indent \indent gmp\_fprintf(print c to outfile) \\
+\\
+\underline{void ss\_decrypt(mpz\_t m, mpz\_t c, mpz\_t d, mpz\_t pq)} \\
+\indent m $\leftarrow$ $c^d$ \% pq\\
+\\
+\underline{void ss\_decrypt\_file(FILE *infile, FILE *outfile, mpz\_t d, mpz\_t pq)} \\
+\indent input $\leftarrow$ 0 \\
+\indent \textbf{initialize} mpz\_t k, m, c \\
+\indent k $\leftarrow$ (log2(pq) - 1) / 8 \\
+\indent *block $\leftarrow$ calloc(k, sizeof(uint8\_t)) \\
+\indent \textbf{while} true \\
+\indent \indent input $\leftarrow$ fscanf(Read in a hexstring from infile and save as c) \\
+\indent \indent \textbf{if} input == 1 \\
+\indent \indent \indent ss\_decrypt(m, c, d, pq) \\
+\indent\indent \indent j $\leftarrow$ mpz\_sizeinbase(m, 2) / 8 \\
+\indent \indent \indent mpz\_export(convert m into bytes and store them in the allocated block) \\
+\indent \indent \indent fprintf(print out j - 1 bytes starting from block[1] to outfile) \\
+\indent \indent \textbf{else if} input == End of File \\
+\indent \indent \indent break \\
+\\
+\section{Design/Structure of \texttt{keygen.c}}
+
+DEFINE command-line options "hvb:i:n:d:s:" \\
+\\
+\underline{usage(program)} \\
+\indent print(program synopsis and usage) \\
+\\
+\\
+\underline{main(arguments)} \\
+\indent opt $\leftarrow$ 0 \\
+\indent bits $\leftarrow$ 256 \\
+\indent iters $\leftarrow$ 50 \\
+\indent s $\leftarrow$ false \\
+\indent seed $\leftarrow$ 0 \\
+\indent verbose $\leftarrow$ false \\
+\indent char *pb $\leftarrow$ "ss.pub" \\
+\indent char *pv $\leftarrow$ "ss.priv" \\
+\indent FILE *pbptr \\
+\indent FILE *pvptr \\
+\\
+\indent \textbf{while} opt $\leftarrow$ here is at least an argument \\
+\indent \indent \textbf{switch} (opt) \\
+\indent \indent \indent case argument "b": bits $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "i": iters $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "s": \\
+\indent \indent \indent \indent s $\leftarrow$ true \\
+\indent \indent \indent \indent seed $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "v" \\
+\indent \indent \indent \indent verbose $\leftarrow$ true \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "n" \\
+\indent \indent \indent \indent pb $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "d" \\
+\indent \indent \indent \indent pv $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "h" do usage(argv[0]) \\
+\indent \indent \indent \indent EXIT \\
+\indent \indent \indent default do usage(argv[0]) \\
+\indent \indent \indent \indent return EXIT\_FAILURE \\
+\\
+\indent pbptr $\leftarrow$ open pb file for write \\
+\indent pvptr $\leftarrow$ open pv file for write \\
+\indent \indent \textbf{if} pbptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent \textbf{else if} pvptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\\
+\indent fchmod(set the private key file permission to 0600) \\
+\\
+\indent \textbf{if} s is false \\
+\indent \indent randstate\_init(initialize gmp random state using seed time(NULL))
+\indent \textbf{else} \\
+\indent \indent randstate\_init(initialize gmp random state using user specified seed)
+\\
+\indent \textbf{initialize} mpz\_t p, q, n, d, pq \\
+\indent ss\_make\_pub(p, q, n, bits, iters) \\
+\indent ss\_make\_priv(d, pq, p, q) \\
+\\
+\indent char *user $\leftarrow$ get username \\
+\\
+\indent ss\_write\_pub(n, user, pbptr) \\
+\indent ss\_write\_priv(pq, d, pvptr) \\
+\\
+\indent \textbf{if} verbose is true \\
+\indent \indent print username \\
+\indent \indent print p to STDOUT \\
+\indent \indent print q to STDOUT \\
+\indent \indent print n to STDOUT \\
+\indent \indent print pq to STDOUT \\
+\indent \indent print d to STDOUT \\
+\\
+\indent \textbf{close} pbptr \\
+\indent \textbf{close} pvptr \\
+\\
+\indent clear mpz\_t p, q, n, d, pq \\
+\\
+\indent RETURN 0 \\
+\\
+\section{Design/Structure of \texttt{encrypt.c}}
+
+DEFINE command-line options "hvo:i:n:" \\
+\\
+\underline{usage(program)} \\
+\indent print(program synopsis and usage) \\
+\\
+\\
+\underline{main(arguments)} \\
+\indent opt $\leftarrow$ 0 \\
+\indent verbose $\leftarrow$ false \\
+\indent inp $\leftarrow$ false \\
+\indent out $\leftarrow$ false \\
+\indent char *pb $\leftarrow$ "ss.pub" \\
+\indent char *input \\
+\indent char *output \\
+\indent FILE *finptr \\
+\indent FILE *foutptr \\
+\indent char user[] \\
+\\
+\indent \textbf{initialize} mpz\_t n \\
+\\
+\indent \textbf{while} opt $\leftarrow$ here is at least an argument \\
+\indent \indent \textbf{switch} (opt) \\
+\indent \indent \indent case argument "n": \\
+\indent \indent \indent \indent pb $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "i" \\
+\indent \indent \indent \indent inp $\leftarrow$ true \\
+\indent \indent \indent \indent input $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "o" \\
+\indent \indent \indent \indent out $\leftarrow$ true \\
+\indent \indent \indent \indent output $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "v" \\
+\indent \indent \indent \indent verbose $\leftarrow$ true \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "h" do usage(argv[0]) \\
+\indent \indent \indent \indent EXIT \\
+\indent \indent \indent default do usage(argv[0]) \\
+\indent \indent \indent \indent return EXIT\_FAILURE \\
+\\
+\indent pbptr $\leftarrow$ open pb file\\
+\indent \indent \textbf{if} pbptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent ss\_read\_pub(Read in public key and username, store them in n and user, respectively) \\
+\\
+\indent finptr $\leftarrow$ open input file to be encrypted\\
+\indent \indent \textbf{if} finptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\\
+\indent foutptr $\leftarrow$ open output file to write\\
+\\
+\indent \textbf{if} verbose is true \\
+\indent \indent print username to STDOUT\\
+\indent \indent print n to STDOUT \\
+\\
+\indent \textbf{if} inp is false and out is false \\
+\indent\indent ss\_encrypt\_file(read from STDIN and output to STDOUT) \\
+\indent \textbf{else if} inp is false and out is true \\
+\indent\indent ss\_encrypt\_file(read from STDIN and output to FILE) \\
+\indent \textbf{else if} inp is true and out is true \\
+\indent\indent ss\_encrypt\_file(read from FILE and output to FILE) \\
+\indent \textbf{else if} inp is true and out is false \\
+\indent\indent ss\_encrypt\_file(read from FILE and output to STDOUT) \\
+\\
+\indent \textbf{close} pbptr \\
+\indent \textbf{close} finptr \\
+\indent \textbf{close} foutptr \\
+\\
+\indent clear mpz\_t n \\
+\\
+\indent RETURN 0 \\
+\\
+\section{Design/Structure of \texttt{decrypt.c}}
+
+DEFINE command-line options "hvo:i:n:" \\
+\\
+\underline{usage(program)} \\
+\indent print(program synopsis and usage) \\
+\\
+\\
+\underline{main(arguments)} \\
+\indent opt $\leftarrow$ 0 \\
+\indent verbose $\leftarrow$ false \\
+\indent inp $\leftarrow$ false \\
+\indent out $\leftarrow$ false \\
+\indent char *pb $\leftarrow$ "ss.priv" \\
+\indent char *input \\
+\indent char *output \\
+\indent FILE *finptr \\
+\indent FILE *foutptr \\
+\\
+\indent \textbf{initialize} mpz\_t d, pq \\
+\\
+\indent \textbf{while} opt $\leftarrow$ here is at least an argument \\
+\indent \indent \textbf{switch} (opt) \\
+\indent \indent \indent case argument "n": \\
+\indent \indent \indent \indent pv $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "i" \\
+\indent \indent \indent \indent inp $\leftarrow$ true \\
+\indent \indent \indent \indent input $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "o" \\
+\indent \indent \indent \indent out $\leftarrow$ true \\
+\indent \indent \indent \indent output $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "v" \\
+\indent \indent \indent \indent verbose $\leftarrow$ true \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "h" do usage(argv[0]) \\
+\indent \indent \indent \indent EXIT \\
+\indent \indent \indent default do usage(argv[0]) \\
+\indent \indent \indent \indent return EXIT\_FAILURE \\
+\\
+\indent pvptr $\leftarrow$ open pv file\\
+\indent \indent \textbf{if} pvptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent ss\_read\_priv(Read in public key and store them in pq and d) \\
+\\
+\indent finptr $\leftarrow$ open input file to be decrypted\\
+\indent \indent \textbf{if} finptr does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\\
+\indent foutptr $\leftarrow$ open output file to write\\
+\\
+\indent \textbf{if} verbose is true \\
+\indent \indent print username to STDOUT\\
+\indent \indent print n to STDOUT \\
+\\
+\indent \textbf{if} inp is false and out is false \\
+\indent\indent ss\_decrypt\_file(read from STDIN and output to STDOUT) \\
+\indent \textbf{else if} inp is false and out is true \\
+\indent\indent ss\_decrypt\_file(read from STDIN and output to FILE) \\
+\indent \textbf{else if} inp is true and out is true \\
+\indent\indent ss\_decrypt\_file(read from FILE and output to FILE) \\
+\indent \textbf{else if} inp is true and out is false \\
+\indent\indent ss\_decrypt\_file(read from FILE and output to STDOUT) \\
+\\
+\indent \textbf{close} pbptr \\
+\indent \textbf{close} finptr \\
+\indent \textbf{close} foutptr \\
+\\
+\indent clear mpz\_t d, pq \\
+\\
+\indent RETURN 0 \\
+\\
+\section{Credit}
+
+\begin{itemize}
+  \item Dev's section on Feb. 14th.
+  \item Some functions were modified from the \textit{primes.py} in resources
+  \item Some functions were modified from the \textit{test-prime-ss.c} in resources
+  \item Some functions were modified from the \textit{ss.py} in resources
+\end{itemize}
+\end{document}

@@ -1,0 +1,369 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath, hyperref}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 6 Lempel-Ziv Compression}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Programs}
+The two main programs will be the implementation of compression and decompression using the Lempel-Ziv Compression algorithm. The \texttt{encode.c} is a compression program that compresses any file, text, or binary. The \texttt{decode.c} program can decompress any file, text or binary, that was compressed with \texttt{encode}. 
+The \texttt{trie.c} contains the implementation of the ADT and functions for tries. The \texttt{word.c} program contains the implementations of the ADT and functions for words and word tables. The \texttt{io.c} contains implementations of an I/O module to read or write through some buffer. The two main programs will use the libraries and modules to perform efficient compression and decompression. \\
+
+\section{Files To Be Included in Directory \textit{asgn6}}
+
+\begin{itemize}
+   \item \texttt{trie.c} and \texttt{trie.h}
+   \begin{itemize}
+     \item This is the implementation of the \texttt{TrieNode} ADT, including type construction and declarations in the header file and associated functions in the .c file.
+   \end{itemize}
+   \item \texttt{word.c} and \texttt{word.h}
+   \begin{itemize}
+     \item This is the implementation of the \texttt{Word} and WordTable ADT, including type construction and declarations in the header file and associated functions in the .c file.
+   \end{itemize}
+   \item \texttt{io.c} and \texttt{io.h}
+   \begin{itemize}
+     \item This is the implementation of all the I/O used in compression and decompression, including function declarations in the header file and associated functions in the .c file.
+   \end{itemize}
+   \item \texttt{encode.c}
+   \begin{itemize}
+     \item This is the implementation of the compression process, including the main() function.
+   \end{itemize}
+   \item \texttt{decode.c}
+   \begin{itemize}
+     \item This is the implementation of the decompression process, including the main() function.
+   \end{itemize}
+   \item \texttt{endian.h}
+   \begin{itemize}
+     \item A header file includes the functions to check endianness and swap endianness.
+   \end{itemize}
+   \item \texttt{code.h}
+   \begin{itemize}
+     \item A header file that defines the code values used in the main programs.
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item This file compiles the programs and builds the \texttt{encode} and \texttt{decode} executable
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use all the programs and \texttt{Makefile}, including explanations on command-line options
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for all the programs
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Things learned in this assignment in detail
+   \end{itemize}
+ \end{itemize}
+
+\section{Design Process of \texttt{trie.c}}
+
+\texttt{trie.c} contains the functions to access or manipulate the \texttt{TrieNode} ADT. The functions support creating a new \texttt{TrieNode} or a root of a Trie, deleting one \texttt{TrieNode} or a whole branch of a Trie, resetting a Trie ,and stepping through a Trie to find the next child. \\
+
+\section{Design/Structure of \texttt{trie.c}}
+
+\underline{TrieNode *trie\_node\_create(uint16\_t index)} \\
+\indent TrieNode *n \\
+\indent n $\leftarrow$ calloc(memory for a TrieNode) \\
+\indent Check n is not NULL \\
+\indent TrieNode *child[ALPHABET] \\
+\indent \textbf{for} i = 0 to ALPHABET - 1 \\
+\indent \indent child[i] $\leftarrow$ NULL \\
+\indent n->children $\leftarrow$ child \\
+\indent n->code $\leftarrow$ index \\
+\indent \textbf{return} n \\
+\\
+\underline{void trie\_node\_delete(TrieNode *n)} \\
+\indent Free memory of \texttt{n} \\
+\indent n $\leftarrow$ NULL \\
+\\
+\underline{TrieNode *trie\_create(void)} \\
+\indent TrieNode *n $\leftarrow$ create a TrieNode using trie\_node\_create() \\
+\indent \textbf{if} not n \\
+\indent \indent \textbf{return} NULL \\
+\indent \textbf{return} n
+\\
+\underline{void trie\_reset(TrieNode *root)} \\
+\indent \textbf{for} i = 0 to ALPHABET - 1 \\
+\indent \indent \textbf{if} root->children[i] exist \\
+\indent \indent \indent delete TrieNode root->children[i] using trie\_node\_delete() \\
+\\
+\underline{void trie\_delete(TrieNode *n)} \\
+\indent \textbf{if} n doesn't exist \\
+\indent \indent \textbf{return} void \\
+\indent \textbf{else if} n exist \\
+\indent \indent \textbf{for} i = 0 to ALPHABET - 1 \\
+\indent \indent \indent \textbf{if} root->children[i] exist \\
+\indent \indent \indent \indent delete TrieNode root->children[i] using trie\_delete() \\
+\indent \indent \indent \textbf{else} \\
+\indent \indent \indent \indent delete TrieNode root->children[i] using trie\_node \_delete() \\
+\\
+\underline{TrieNode *trie\_step(TrieNode *n, uint8\_t sym)} \\
+\indent \textbf{if} n->children[sym] doesn't exist \\
+\indent \indent \textbf{return} NULL \\
+\indent \textbf{return} n->children[sym] \\
+\\
+\section{Design Process of \texttt{word.c}}
+
+\texttt{word.c} contains the functions to access or manipulate the \texttt{Word} and \texttt{WordTable} ADT. The functions support creating a new \texttt{Word} or a new \texttt{WordTable} (an array of \texttt{Word}), deleting one \texttt{Word} or a \texttt{WordTable}, resetting a \texttt{WordTable} and appending a symbol to a \texttt{Word} to form a new \texttt{Word}. \\
+
+\section{Design/Structure of \texttt{word.c}}
+
+\underline{Word *word\_create(uint8\_t *syms, uint32\_t len)} \\
+\indent Word *w \\
+\indent w $\leftarrow$ calloc(memory for a Word) \\
+\indent w->syms $\leftarrow$ syms \\
+\indent w->len $\leftarrow$ len \\
+\indent \textbf{if} not w \\
+\indent \indent \textbf{return} NULL \\
+\indent \textbf{return} w \\
+\\
+\underline{Word *word\_append\_sym(Word *w, uint8\_t sym)} \\
+\indent \textbf{if} w is 0 \\
+\indent \indent uint8\_t *s[1] \\
+\indent \indent s[0] $\leftarrow$ sym \\
+\indent \indent w->syms $\leftarrow$ s \\
+\indent \indent w->len $\leftarrow$ 1 \\
+\indent int8\_t *s[w->len + 1] \\
+\indent s[w->len] $\leftarrow$ sym \\
+\indent w->syms $\leftarrow$ s \\
+\indent w->len $\leftarrow$ w->len + 1 \\
+\indent \textbf{return} w \\
+\\
+\underline{void word\_delete(Word *w)} \\
+\indent Free thr memory of \texttt{w} \\
+\\
+\underline{WordTable *wt\_create(void)} \\
+\indent WordTable *wt \\
+\indent wt $\leftarrow$ calloc(memory for a WordTable: MAX\_CODE of Word) \\
+\indent wt[EMPTY\_CODE] $\leftarrow$ word of 0 length \\
+\indent \textbf{return} wt \\
+\\
+\underline{void wt\_reset(WordTable *wt)} \\
+\indent \textbf{for} i = 0 to MAX\_CODE - 1 \\
+\indent \indent wt[i] $\leftarrow$ NULL \\
+\\
+\underline{void wt\_delete(WordTable *wt)} \\
+Free memory of \texttt{wt} \\
+\\
+\section{Design Process of \texttt{io.c}}
+
+\texttt{io.c} contains the functions to perform the I/O in the compression/decompression process. \texttt{read\_bytes} and \texttt{write\_bytes} are basic functions to ensure the read-in and written-out byte numbers are right. \texttt{read\_header} and \texttt{write\_header} are for read in and write out file header in \texttt{encode} and \texttt{decode}, respectively. They also check the endianness in the beginning. \texttt{read\_sym}, \texttt{write\_pair} and \texttt{flush\_pairs} are used in \texttt{encode.c} to perform "read in one symbol at a time and check if all symbols are read," "write out a pair of code and symbol to output file through buffer."
+\\
+\section{Design/Structure of \texttt{io.c}}
+
+\underline{int read\_bytes(int infile, uint8\_t *buf, int to\_read)} \\
+\indent r $\leftarrow$ 0 \\
+\indent \textbf{while} r < to\_read \\
+\indent \indent \indent tmp $\leftarrow$ read to\_read bytes from infile to buf using read() \\
+\indent \indent \textbf{if} tmp <= 0 \\
+\indent \indent \indent break \\
+\indent \indent r $\leftarrow$ r + tmp \\
+\indent \textbf{return} r \\
+\\
+\underline{int write\_bytes(int outfile, uint8\_t *buf, int to\_write)} \\
+\indent w $\leftarrow$ 0 \\
+\indent \textbf{while} r < to\_write\\
+\indent \indent \indent tmp $\leftarrow$ write to\_write bytes from buf to outfile using write() \\
+\indent \indent \textbf{if} tmp <= 0 \\
+\indent \indent \indent break \\
+\indent \indent w $\leftarrow$ w + tmp \\
+\indent \textbf{return} w \\
+\\
+\underline{void read\_header(int infile, FileHeader *header)} \\
+\indent r $\leftarrow$ read in FileHeader size of bytes from infile to header \\
+\indent \textbf{if} not little\_endian \\
+\indent \indent \textbf{swap} header \\
+\\
+\underline{void write\_header(int outfile, FileHeader *header)} \\
+\indent \textbf{if} not little\_endian \\
+\indent \indent \textbf{swap} header \\
+\indent w $\leftarrow$ write FileHeader size of bytes from header to outfile \\
+\\
+\underline{bool read\_sym(int infile, uint8\_t *sym)} \\
+\indent \textbf{if} all bytes in the buffer has been read \\
+\indent \indent Read in a new block of bytes from infile \\
+\indent *sym $\leftarrow$ buffer[total\_syms \% block size] \\
+\indent total\_syms $\leftarrow$ total\_syms + 1 \\
+\indent \textbf{if} no more symbol to read from the buffer or infile \\
+\indent \indent \textbf{return} false \\
+\indent \textbf{return} true \\
+\\
+\underline{void write\_pair(int outfile, uint16\_t code, uint8\_t sym, int bitlen)} \\
+\indent code\_rev $\leftarrow$ code wrote from LSB in bitlen \\
+\indent sym\_rev $\leftarrow$ sym wrote from LSB \\
+\indent start\_pos $\leftarrow$ ((total\_bits \% (block size * 8)) \% 8) + 1 \\
+\indent bit\_idx $\leftarrow$ bitlen \\
+\indent buff\_index $\leftarrow$ ((total\_bits \% (BLOCK * 8)) / 8) \\
+\indent cd\_bi $\leftarrow$ 0 \\
+\indent \textbf{while} bit\_idx not 0 \\
+\indent \indent mask $\leftarrow$ bit mask for the bit at bit\_idx position \\
+\indent \indent write\_buff $\leftarrow$ code\_rev \& mask \\
+\indent \indent cd\_bi $\leftarrow$ cd\_bi | write\_buff \\
+\indent \indent start\_pos $\leftarrow$ start\_pos + 1 \\
+\indent \indent bit\_idx $\leftarrow$ bit\_idx - 1 \\
+\indent \indent total\_bits $\leftarrow$ total\_bits + 1 \\
+\indent \indent \textbf{if} one byte is filled and should go to the next byte \\
+\indent \indent \indent \textbf{if} whole block of buffer is filled \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | cd\_bi \\
+\indent \indent \indent \indent flush\_pairs(Write out everything in the buffer) \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ 0 \\
+\indent \indent \indent \textbf{else} \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | cd\_bi \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ buff\_index + 1 \\
+\indent \indent \indent cd\_bi $\leftarrow$ 0 \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent \textbf{if} bit\_idx is 0 \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | cd\_bi \\
+\indent \indent \indent \indent cd\_bi $\leftarrow$ 0 \\
+\indent sym\_idx $\leftarrow$ 8 \\
+\indent sm\_bi $\leftarrow$ 0 \\
+\indent \textbf{while} sym\_idx not 0 \\
+\indent \indent mask $\leftarrow$ bit mask for the bit at sym\_idx position \\
+\indent \indent write\_buff $\leftarrow$ sym\_rev \& mask \\
+\indent \indent sm\_bi $\leftarrow$ sm\_bi | write\_buff \\
+\indent \indent start\_pos $\leftarrow$ start\_pos + 1 \\
+\indent \indent sym\_idx $\leftarrow$ sym\_idx - 1 \\
+\indent \indent total\_bits $\leftarrow$ total\_bits + 1 \\
+\indent \indent \textbf{if} one byte is filled and should go to the next byte \\
+\indent \indent \indent \textbf{if} whole block of buffer is filled \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | sm\_bi \\
+\indent \indent \indent \indent flush\_pairs(Write out everything in the buffer) \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ 0 \\
+\indent \indent \indent \textbf{else} \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | sm\_bi \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ buff\_index + 1 \\
+\indent \indent \indent sm\_bi $\leftarrow$ 0 \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent \textbf{if} sym\_idx is 0 \\
+\indent \indent \indent \indent buffer[buff\_index] $\leftarrow$ buffer[buff\_index] | sm\_bi \\
+\indent \indent \indent \indent sm\_bi $\leftarrow$ 0 \\
+\\
+\underline{void flush\_pairs(int outfile)} \\
+\indent write out all bytes in the buffer to outfile \\
+\indent set all bytes of the buffer to 0 \\
+\\
+\underline{read\_pair(int infile, uint16\_t *code, uint8\_t *sym, int bitlen)} \\
+\indent \textbf{if} all bytes in the buffer has been read \\
+\indent \indent Read in a new block of bytes from infile \\
+\indent start\_pos $\leftarrow$ ((total\_bits \% (BLOCK * 8)) \% 8) + 1 \\
+\indent bit\_idx $\leftarrow$ bitlen \\
+\indent buff\_index $\leftarrow$ ((total\_bits \% (BLOCK * 8)) / 8) \\
+\indent cd\_bi $\leftarrow$ 0 \\
+\indent cd\_by $\leftarrow$ 0 \\
+\indent \textbf{while} bit\_idx not 0 \\
+\indent \indent cd\_bi $\leftarrow$ cd\_bi | (read one bit) \\
+\indent \indent start\_pos $\leftarrow$ start\_pos + 1 \\
+\indent \indent bit\_idx $\leftarrow$ bit\_idx - 1 \\
+\indent \indent total\_bits $\leftarrow$ total\_bits + 1 \\
+\indent \indent \textbf{if} one byte is filled and should go to the next byte \\
+\indent \indent \indent \textbf{if} whole block of buffer is filled \\
+\indent \indent \indent \indent read a new block of bytes from infile \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ 0 \\
+\indent \indent \indent \textbf{else} \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ buff\_index + 1 \\
+\indent \indent \indent cd\_by $\leftarrow$ cd\_by | (cd\_bi <<= bit\_idx) \\
+\indent \indent \indent cd\_bi $\leftarrow$ 0 \\
+\indent *code $\leftarrow$ (cd\_by | cd\_bi) read from LSB \\
+\indent sym\_idx $\leftarrow$ 8 \\
+\indent sm\_bi $\leftarrow$ 0 \\
+\indent sm\_by $\leftarrow$ 0 \\
+\indent \textbf{while} sym\_idx not 0 \\
+\indent \indent sm\_bi $\leftarrow$ sm\_bi | (read one bit) \\
+\indent \indent start\_pos $\leftarrow$ start\_pos + 1 \\
+\indent \indent sym\_idx $\leftarrow$ sym\_idx - 1 \\
+\indent \indent total\_bits $\leftarrow$ total\_bits + 1 \\
+\indent \indent \textbf{if} one byte is filled and should go to the next byte \\
+\indent \indent \indent \textbf{if} whole block of buffer is filled \\
+\indent \indent \indent \indent read a new block of bytes from infile \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ 0 \\
+\indent \indent \indent \textbf{else} \\
+\indent \indent \indent \indent buff\_index $\leftarrow$ buff\_index + 1 \\
+\indent \indent \indent sm\_by $\leftarrow$ sm\_by | (sm\_bi <<= sym\_idx) \\
+\indent \indent \indent sm\_bi $\leftarrow$ 0 \\
+\indent *sym $\leftarrow$ (sm\_by | sm\_bi) read from LSB \\
+\indent \textbf{if} no more symbol to read from the buffer or infile \\
+\indent \indent \textbf{return} false \\
+\indent \textbf{return} true \\
+\\
+\underline{void write\_word(int outfile, Word *w)} \\
+\indent sm\_idx $\leftarrow$ w->len \\
+\indent \textbf{while} sm\_idx not 0 \\
+\indent \indent buffer[total\_syms \% BLOCK] $\leftarrow$ w->syms[w->len - sm\_idx] \\
+\indent \indent sm\_idx $\leftarrow$ sm\_idx - 1 \\
+\indent \indent total\_syms $\leftarrow$ total\_syms + 1 \\
+\indent \textbf{if} the buffer is filled \\
+\indent \indent write out all the bytes in the buffer to outfile \\
+\\
+\underline{void flush\_words(int outfile)} \\
+\indent write out all bytes in the buffer to outfile \\
+\indent set all bytes of the buffer to 0 \\
+\\
+\section{Design Process of \texttt{encode.c}}
+
+\texttt{encode.c} contains the main() and is the main implementation of file compression. The program will first take in command-line options and open input and output files based on the given options. After writing the header to the output file, a Trie will be created. A few counters are used to keep track of the next available code, the previous trie node, and the previously read symbol. Next, construct the Trie and write out the compressed pairs based on the symbols read in. Finally, flush out any unwritten, buffered pairs to the output file.
+\\
+\section{Design/Structure of \texttt{encode.c}}
+
+\underline{COMPRESS(infile, outfile)} \\
+\indent root $\leftarrow$ trie\_create() \\
+\indent curr\_node $\leftarrow$ root \\
+\indent prev\_node $\leftarrow$ NULL \\
+\indent curr\_sym $\leftarrow$ 0 \\
+\indent prev\_sym $\leftarrow$ 0 \\
+\indent next\_code $\leftarrow$ START\_CODE \\
+\indent \textbf{while} read\_sym(infile, \&curr\_sym) is true \\
+\indent \indent next\_node $\leftarrow$ trie\_step(curr\_node, curr\_sym) \\
+\indent \indent \textbf{if} next\_node is not NULL \\
+\indent \indent \indent prev\_node $\leftarrow$ curr\_node \\
+\indent \indent \indent curr\_node $\leftarrow$ next\_node \\
+\indent \indent \textbf{else} \\
+\indent \indent \indent write\_pair(outfile, curr\_node.code, curr\_sym, bit\_length(next\_code)) \\
+\indent \indent \indent curr\_node.children[curr\_sym] = trie\_node\_create(next\_code) \\
+\indent \indent \indent curr\_node $\leftarrow$ root \\
+\indent \indent \indent next\_code $\leftarrow$ next\_code + 1 \\
+\indent \indent \textbf{if} next\_code is MAX\_CODE \\
+\indent \indent \indent trie\_reset(root) \\
+\indent \indent \indent curr\_node = root \\
+\indent \indent \indent next\_code = START\_CODE \\
+\indent \indent \indent prev\_sym = curr\_sym \\
+\indent \textbf{if} curr\_node is not root \\
+\indent \indent write\_pair(outfile, prev\_node.code, prev\_sym, bit\_length(next\_code)) \\
+\indent \indent next\_code $\leftarrow$ (next\_code+1) \% MAX\_CODE \\
+\indent write\_pair(outfile, STOP\_CODE, 0, bit\_length(next\_code)) \\
+\indent flush\_pairs(outfile) \\
+\\
+\section{Design Process of \texttt{decode.c}}
+
+\texttt{decode.c} contains the main() and is the main implementation of file decompression. The program will first take in command-line options and open input and output files based on the given options. 
+After reading the header and verifying the magic number, a WordTable will be created. A few counters are used to keep track of current code and the next code. Next, complete the WordTable and write out the decompressed words based on the pairs read in. Finally, flush out any unwritten, buffered words to the output file.
+\\
+\section{Design/Structure of \texttt{decode.c}}
+
+\underline{DECOMPRESS(infile, outfile)}
+\indent table $\leftarrow$ wt\_create() \\
+\indent curr\_sym $\leftarrow$ 0 \\
+\indent curr\_code $\leftarrow$ 0 \\
+\indent next\_code $\leftarrow$ START\_CODE \\
+\indent \textbf{while} read\_pair(infile, \&curr\_code, \&curr\_sym, bit\_length(next\_code)) is true \\
+\indent \indent table[next\_code] $\leftarrow$ word\_append\_sym(table[curr\_code], curr\_sym) \\
+\indent \indent write\_word(outfile, table[next\_code]) \\
+\indent \indent next\_code $\leftarrow$ next\_code + 1 \\
+\indent \indent \textbf{if} next\_code is MAX\_CODE \\
+\indent \indent \indent wt\_reset(table) \\
+\indent \indent \indent next\_code $\leftarrow$ START\_CODE \\
+\indent flush\_words(outfile)
+\\
+\section{Credit}
+
+\begin{itemize}
+\item Dev's section on Feb. 28th.
+\item Part of the pseudocode from the \textit{Asgn6.pdf} specifics in resources
+\item LSB binary operation concepts from the \href{https://stackoverflow.com/questions/59294026/binary-representation-starting-with-a-least-significant-bit-in-c}{discussion}
+\end{itemize}
+\end{document}

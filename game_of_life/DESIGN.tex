@@ -1,0 +1,366 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath, hyperref}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 4}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Programs}
+
+The \texttt{life.c} program implements the Game of Life evolution based on input files or STDIN and shows the animation of the evolution of the universe. The \texttt{universe.c} program includes the structure of \texttt{Universe} and the accessing and manipulating functions that will be used in \texttt{life.c}.
+
+\section{Files To Be Included in Directory \textit{asgn3}}
+
+\begin{itemize}
+   \item \texttt{universe.c}
+   \begin{itemize}
+     \item This is the implementation of the \texttt{Universe} ADT, including type construction and associated functions.
+   \end{itemize}
+   \item \texttt{universe.h}
+   \begin{itemize}
+     \item This file specifies the interface to the \texttt{Universe} ADT, including declaration of new \texttt{type} and \texttt{universe}.
+   \end{itemize}
+   \item \texttt{life.c}
+   \begin{itemize}
+     \item This program contains \texttt{main()} and can read in inputs to create the universe. It's the main implementation of the Game of Life.
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item This file compiles the sorting programs and builds the \texttt{life} executable
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use all the programs and \texttt{Makefile}, including explanations on command-line options
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for all the programs
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Things learned in this assignment in detail
+   \end{itemize}
+ \end{itemize}
+
+\section{Design Process of \texttt{universe.c}}
+
+The \texttt{universe.c} includes the detailed of \texttt{Universe } struct and all the helper, accessor, constructor, destructor and manipulator functions for \texttt{Universe}. All of the "uv-" prefixed functions were implemented according to the descriptions in the assignment PDF. I added a \texttt{in\_bound} function to check whether the given row/column pairs are out-of-bounds and a \texttt{swap} function to help swap the pointers of two \texttt{Universe}. The other helper function is \texttt{one\_generation}, which performs one generation of the cell evolution according to the given rules. All these functions are used in \texttt{life.c}.
+
+\section{Design/Structure of \texttt{universe.c}}
+
+DEFINE Universe instance $\leftarrow$ [rows, cols, **grid, toroidal] \\
+\\
+function int in\_bound(uint32\_t rows, uint32\_t cols, uint32\_t r, uint32\_t c) \\
+\indent IF (r+1) <= rows and (c+1) <= cols \\
+\indent \indent RETURN 1 \\
+\indent ELSE \\
+\indent \indent RETURN 0 \\
+\indent END IF \\
+END function \\
+\\
+\\
+function void swap(Universe *x, Universe *y) \\
+\indent tmp $\leftarrow$ *x \\
+\indent *x $\leftarrow$ *y \\
+\indent *y $\leftarrow$ tmp \\
+END function \\
+\\
+\\
+function int32\_t mod(int32\_t a, int32\_t b) \\
+\indent n $\leftarrow$ a \% b \\
+\indent RETURN (n + b) if n < 0 else RETURN n \\
+END function \\
+\\
+\\
+function Universe *uv\_create(uint32\_t rows, uint32\_t cols, bool toroidal) \\
+\indent SET Universe *u \\
+\indent u $\leftarrow$ calloc(1, sizeof(Universe)) \\
+\indent SET **grid $\leftarrow$ calloc(rows, sizeof(bool pointer)) \\
+\indent FOR r = 0 to rows \\
+\indent \indent grid[r] $\leftarrow$ calloc(cols, sizeof(bool)) \\
+\indent END FOR \\
+\indent u->rows $\leftarrow$ rows \\
+\indent u->cols $\leftarrow$ cols \\
+\indent u->grid $\leftarrow$ grid \\
+\indent u->toroidal $\leftarrow$ toroidal \\
+\indent RETURN universe \\
+END function \\
+\\
+\\
+function void uv\_delete(Universe *u) \\
+\indent FOR i = 0 to u->rows \\
+\indent \indent free(u->grid[i]) \\
+\indent free(u->grid) \\
+\indent free(u) \\
+END function \\
+\\
+\\
+function uint32\_t uv\_rows(Universe *u) \\
+\indent RETURN u->rows \\
+END function \\
+\\
+\\
+function uint32\_t uv\_cols(Universe *u) \\
+\indent RETURN u->cols \\
+END function \\
+\\
+\\
+function void uv\_live\_cell(Universe *u, uint32\_t r, uint32\_t c) \\
+\indent IF (r+1) <= u->rows and (c+1) <= u->cols \\
+\indent \indent u->grid[r][c] $\leftarrow$ TRUE \\
+\indent END IF \\
+END function \\
+\\
+\\
+function void uv\_dead\_cell(Universe *u, uint32\_t r, uint32\_t c) \\
+\indent IF (r+1) <= u->rows and (c+1) <= u->cols \\
+\indent \indent u->grid[r][c] $\leftarrow$ FALSE \\
+\indent END IF \\
+END function \\
+\\
+\\
+function bool uv\_get\_cell(Universe *u, uint32\_t r, uint32\_t c) \\
+\indent IF (r+1) <= u->rows and (c+1) <= u->cols \\
+\indent \indent RETURN u->grid[r][c] \\
+\indent ELSE \\
+\indent \indent RETURN FALSE \\
+\indent END IF \\
+END function \\
+\\
+\\
+function bool uv\_populate(Universe *u, FILE *infile) \\
+\indent SET r $\leftarrow$ 0 \\
+\indent SET c $\leftarrow$ 0 \\
+\indent WHILE TRUE \\
+\indent \indent SET input $\leftarrow$ fscanf(infile, format read in 2 uint32\_t, $&r$, $&c$) \\
+\indent \indent IF input == 2 and in\_bound(u->rows, u->cols, r, c) == 1 \\
+\indent \indent \indent SET u->grid[r][c] $\leftarrow$ TRUE \\
+\indent \indent ELSE IF in\_bound(u->rows, u->cols, r, c) == 0 \\
+\indent \indent \indent RETURN FALSE \\
+\indent \indent ELSE IF read till the end of file \\
+\indent \indent \indent RETURN TRUE \\
+\indent \indent \indent break \\
+\indent \indent ELSE IF input not equal 2 and input not equal end of file \\
+\indent \indent \indent RETURN FALSE \\
+\indent \indent END IF \\
+\indent END WHILE \\
+END function \\
+\\
+\\
+function uint32\_t uv\_census(Universe *u, uint32\_t r, uint32\_t c) \\
+\indent IF u->toroidal == false \\
+\indent \indent SET live $\leftarrow$ 0 \\
+\indent r\_int $\leftarrow$ (int32\_t) r \\
+\indent c\_int $\leftarrow$ (int32\_t) c \\
+\indent \indent FOR i = r\_int-1 to r\_int+1 \\
+\indent \indent \indent FOR j = c\_int-1 to c\_int+1 \\
+\indent \indent \indent \indent IF (i+1) <= u->rows and (j+1) <= u->cols and i >= 0 and j >= 0 and u->grid[i][j] == TRUE \\
+\indent \indent \indent \indent \indent live $\leftarrow$ live + 1 \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END FOR \\
+\indent \indent END FOR \\
+\indent \indent IF u->grid[r][c] == TRUE \\
+\indent \indent \indent RETURN live - 1 \\
+\indent \indent ELSE \\
+\indent \indent \indent RETURN live \\
+\indent \indent END IF \\
+\indent ELSE \\
+\indent \indent SET live $\leftarrow$ 0 \\
+\indent r\_int $\leftarrow$ (int32\_t) r \\
+\indent c\_int $\leftarrow$ (int32\_t) c \\
+\indent \indent FOR i = r\_int-1 to r\_int+1 \\
+\indent \indent \indent FOR j = c\_int-1 to c\_int+1 \\
+\indent \indent \indent \indent IF (i+1) > u->rows or i < 0 or (j + 1) > u->cols or j < 0 \\
+\indent \indent \indent \indent \indent IF u->grid[mod(i, u->rows)][mod(j, u->cols)] == TRUE \\
+\indent \indent \indent \indent \indent \indent live $\leftarrow$ live + 1 \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent IF u->grid[i][j] == TRUE \\
+\indent \indent \indent \indent \indent \indent live $\leftarrow$ live + 1 \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END FOR \\
+\indent \indent END FOR \\
+\indent \indent IF u->grid[r][c] == TRUE \\
+\indent \indent \indent RETURN live - 1 \\
+\indent \indent ELSE \\
+\indent \indent \indent RETURN live \\
+\indent \indent END IF \\
+\indent END IF \\
+END function \\
+\\
+\\
+function void uv\_print(Universe *u, FILE *outfile) \\
+\indent FOR i = 0 to u->rows \\
+\indent \indent FOR j = 0 to u->cols \\
+\indent \indent \indent IF (j + 1) == u->cols \\
+\indent \indent \indent \indent IF u->grid[i][j] == TRUE \\
+\indent \indent \indent \indent \indent PRINT "o\n" to outfile \\
+\indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent PRINT ".\n" to outfile \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent ELSE \\
+\indent \indent \indent \indent IF u->grid[i][j] == TRUE \\
+\indent \indent \indent \indent \indent PRINT "o" to outfile \\
+\indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent PRINT "." to outfile \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END IF \\
+\indent \indent END FOR \\
+\indent END FOR \\
+END function \\
+\\
+\\
+function void one\_generation(Universe *u\_A, Universe *u\_B, uint32\_t r, uint32\_t c) \\
+\indent FOR i = 0 to r \\
+\indent \indent FOR j = 0 to c \\
+\indent \indent \indent IF uv\_get\_cell(u\_A, i, j) == TRUE and uv\_census(u\_A, i, j) == 2 \\
+\indent \indent \indent \indent uv\_live\_cell(u\_B, i, j) \\
+\indent \indent \indent ELSE IF uv\_get\_cell(u\_A, i, j) == TRUE and uv\_census(u\_A, i, j) == 3 \\
+\indent \indent \indent \indent uv\_live\_cell(u\_B, i, j) \\
+\indent \indent \indent ELSE IF uv\_get\_cell(u\_A, i, j) == FALSE and uv\_census(u\_A, i, j) == 3 \\
+\indent \indent \indent \indent uv\_live\_cell(u\_B, i, j) \\
+\indent \indent \indent ELSE \\
+\indent \indent \indent \indent uv\_dead\_cell(u\_B, i, j) \\
+\indent \indent \indent END IF \\
+\indent \indent END FOR \\
+\indent END FOR \\
+END function \\
+\\
+\\
+\section{Design Process of \texttt{life.c}}
+
+This program first reads the command-line options and the input files or STDIN, creates and populates two \texttt{Universe}, performs some generation of cell evolution, displays the evolution animation on screen, and finally outputs the final state of the \texttt{Universe} to a file or STDOUT. I first declared the helper functions I wrote in \texttt{universe.c} in order to use them in \texttt{life.c}. Then I wrote a function for showing helping information before \texttt{main()}.
+
+In \texttt{main()}, I declared variables for storing command-line arguments and input/output file names. After reading the command-line arguments, the first line of the input was read and the numbers were stored for creating \texttt{Universe}. The input data were used to create and populate two \texttt{Universe} using functions in \texttt{universe.c}. The \texttt{FILE} pointer for input stream should be closed after the two \texttt{Universe} were successfully populated. Based on the command-line arguments, for each generation display \texttt{Universe A}, perform one generation and then swap the pointers of two \texttt{Universe} if "-s" was not specified. After displaying animation, print out the final state of the \texttt{Universe}. If "-s" was specified, print out the final state of the \texttt{Universe} without animation. Finally, I deleted both \texttt{Universe} after printing successfully.
+
+\section{Design/Structure of \texttt{life.c}}
+
+DEFINE command-line options "tsn:i:o:h" \\
+\\
+function usage(program) \\
+\indent print(program synopsis and usage) \\
+END function \\
+\\
+\\
+function main(arguments) \\
+\indent SET opt $\leftarrow$ 0 \\
+\indent SET torus $\leftarrow$ FALSE \\
+\indent SET silence $\leftarrow$ FALSE \\
+\indent SET num $\leftarrow$ 100 \\
+\indent SET inp $\leftarrow$ FALSE \\
+\indent SET out $\leftarrow$ FALSE \\
+\indent SET char *input \\
+\indent SET char *output \\
+\indent SET FILE *finptr \\
+\indent SET FILE *foutptr \\
+\indent SET r $\leftarrow$ 0 \\
+\indent SET c $\leftarrow$ 0 \\
+\\
+\indent WHILE opt $\leftarrow$ here is at least an argument \\
+\indent \indent SWITCH(opt) \\
+\indent \indent \indent case argument "t" SET torus $\leftarrow$ TRUE \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "s" SET silence $\leftarrow$ TRUE \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "n" SET num $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "i" \\
+\indent \indent \indent \indent inp $\leftarrow$ TRUE \\
+\indent \indent \indent \indent input $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "o" \\
+\indent \indent \indent \indent out $\leftarrow$ TRUE \\
+\indent \indent \indent \indent output $\leftarrow$ optarg \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "h" do usage(argv[0]) \\
+\indent \indent \indent \indent EXIT \\
+\indent \indent \indent default do usage(argv[0]) \\
+\indent \indent \indent \indent return EXIT\_FAILURE \\
+\indent \indent END SWITCH \\
+\indent END WHILE \\
+\\
+\indent IF inp == FALSE \\
+\indent \indent fscanf(stdin, format read in 2 uint32\_t, $\&r$, $\&c$) \\
+\indent ELSE \\
+\indent \indent IF (finptr $\leftarrow$ fopen(input, "r")) does not exist \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent ELSE \\
+\indent \indent \indent fscanf(finptr, format read in 2 uint32\_t, $\&r$, $\&c$) \\
+\indent \indent END IF \\
+\indent END IF \\
+\\
+\indent SET Universe *uni\_A $\leftarrow$ uv\_create(r, c, torus) \\
+\indent SET Universe *uni\_A $\leftarrow$ uv\_create(r, c, torus) \\
+\\
+\indent IF inp == FALSE \\
+\indent \indent populated = uv\_populate(uni\_A, stdin) \\
+\indent \indent IF populated == FALSE \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent END IF \\
+\indent ELSE \\
+\indent \indent populated = uv\_populate(uni\_A, finptr) \\
+\indent \indent IF populated == FALSE \\
+\indent \indent \indent PRINT ERROR \\
+\indent \indent \indent EXIT \\
+\indent \indent END IF \\
+\indent END IF \\
+\\
+\indent CLOSE finptr \\
+\\
+\indent SET r\_A $\leftarrow$ uv\_rows(uni\_A) \\
+\indent SET c\_A $\leftarrow$ uv\_cols(uni\_A) \\
+\\
+\indent IF silence == FALSE \\
+\indent \indent initscr() \\
+\indent \indent curs\_set(FALSE) \\
+\indent \indent FOR k = 0 to num-1 \\
+\indent \indent \indent clear() \\
+\indent \indent \indent FOR i = 0 to r\_A-1 \\
+\indent \indent \indent \indent FOR j = 0 to c\_A-1 \\
+\indent \indent \indent \indent \indent IF uv\_get\_cell(uni\_A, i, j) == TRUE \\
+\indent \indent \indent \indent \indent \indent PRINT "o" at location (i, j) on screen \\
+\indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent PRINT "." at location (i, j) on screen \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent END FOR \\
+\indent \indent \indent END FOR \\
+\indent \indent \indent refresh() \\
+\indent \indent \indent usleep(50000) \\
+\indent \indent \indent one\_generation(uni\_A, uni\_B, r\_A, c\_A) \\
+\indent \indent \indent swap(uni\_A, uni\_B) \\
+\indent \indent END FOR \\
+\indent \indent endwin() \\
+\indent ELSE \\
+\indent \indent FOR k = 0 to num-1 \\
+\indent \indent \indent one\_generation(uni\_A, uni\_B, r\_A, c\_A) \\
+\indent \indent \indent swap(uni\_A, uni\_B) \\
+\indent \indent END FOR \\
+\indent END IF \\
+\\
+\indent IF out == FALSE \\
+\indent \indent uv\_print(uni\_A, stdout) \\
+\indent ELSE \\
+\indent \indent foutptr $\leftarrow$ fopen(output, "w")) \\
+\indent \indent uv\_print(uni\_A, foutptr) \\
+\indent END IF \\
+\\
+\indent uv\_delete(uni\indent\_A) \\
+\indent uv\_delete(uni\indent\_B) \\
+\\
+\indent RETURN 0 \\
+End function \\
+\\
+\section{Credit}
+
+\begin{itemize}
+  \item Dev's section on Feb. 7th.
+  \item The \textit{readfile\_example.c} in resources
+  \item Modular arithmetic concepts from the \href{https://stackoverflow.com/questions/11720656/modulo-operation-with-negative-numbers}{discussion}
+\end{itemize}
+\end{document}

@@ -1,0 +1,418 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,fourier,booktabs,amsmath}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\title{Design Document - Assignment 3}
+\author{Hsiang Yun Lu}
+\begin{document}\maketitle
+
+\section{Purpose of Programs}
+
+We will implement four different sorting programs and test their performance by writing a test harness using bit-wise Set operations. The four sorting methods are Shell sort, Heap sort, Quick sort and Batcher sort, respectively. The Set operation implementing functions and statistics module will be separate files that can be used in the main \texttt{sorting.c} testing program.
+
+\section{Files To Be Included in Directory \textit{asgn3}}
+
+\begin{itemize}
+   \item \texttt{shell.c} and \texttt{shell.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of Shell sort. The \texttt{shell.h} is the header file that specifies the interface to \texttt{shell.c}.
+   \end{itemize}
+   \item \texttt{heap.c} and \texttt{heap.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of Heap sort. The \texttt{heap.h} is the header file that specifies the interface to \texttt{heap.c}.
+   \end{itemize}
+   \item \texttt{quick.c} and \texttt{quick.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of recursive Quick sort. The \texttt{quick.h} is the header file that specifies the interface to \texttt{quick.c}.
+   \end{itemize}
+   \item \texttt{batcher.c} and \texttt{batcher.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of Batcher merge sort. The \texttt{batcher.h} is the header file that specifies the interface to \texttt{batcher.c}.
+   \end{itemize}
+   \item \texttt{gaps.h}
+   \begin{itemize}
+     \item This file contains a gap sequence and its length to be used by Shell sort.
+   \end{itemize}
+   \item \texttt{set.c} and \texttt{set.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of bit-wise Set operations. The \texttt{set.h} is the header file that specifies the interface to \texttt{set.c}.
+   \end{itemize}
+   \item \texttt{stats.c} and \texttt{stats.h}
+   \begin{itemize}
+     \item The \texttt{C} program contains implementation of statistics module. The \texttt{stats.h} is the header file that specifies the interface to \texttt{stats.c}.
+   \end{itemize}
+   \item \texttt{sorting.c}
+   \begin{itemize}
+     \item This file contains \texttt{main()} and is the test harness for the four sorting implementation and their statistics.
+   \end{itemize}
+   \item \texttt{Makefile}
+   \begin{itemize}
+     \item This file that compiles the sorting programs and builds the \texttt{sorting} executable
+   \end{itemize}
+   \item \texttt{README.md}
+   \begin{itemize}
+     \item This file describes how to use all the programs and \texttt{Makefile}, including explanations on command-line options
+   \end{itemize}
+   \item \texttt{DESIGN.pdf}
+   \begin{itemize}
+     \item This file describes the design and design process for all the programs
+     \item Include pseudocode
+   \end{itemize}
+   \item \texttt{WRITEUP.pdf}
+   \begin{itemize}
+     \item Findings and things learnt from different sorting algorithms
+     \item Include the graphs that displays the performance of the sorts on a variety of inputs
+     \item Include analysis and explanations for the graphs
+   \end{itemize}
+ \end{itemize}
+
+\section{Design/Structure}
+
+(1) \texttt{shell.c} \\
+\\
+SET stats moves = 0 \\
+SET stats compares = 0 \\
+\\
+function shell\_sort(stat, array, length) \\
+\indent FOR k = 0 to gaps\_len \\
+\indent \indent FOR i = gaps[k] to length \\
+\indent \indent \indent j $\leftarrow$ i \\
+\indent \indent \indent temp $\leftarrow$ array[i] \\
+\indent \indent \indent WHILE j >= gaps[k] and (arr[j - gaps[k]] > temp) \\
+\indent \indent \indent \indent compares += 1 \\
+\indent \indent \indent \indent array[j] $\leftarrow$ array[j - gaps[k]]; \\
+\indent \indent \indent \indent moves += 1 \\
+\indent \indent \indent \indent j -= gaps[k] \\
+\indent \indent \indent END WHILE \\
+\indent \indent \indent array[j] $\leftarrow$ temp \\
+\indent \indent \indent moves += 1 \\
+\indent \indent END FOR \\
+\indent END FOR \\
+END function \\
+\\
+\\
+(2) \texttt{heap.c} \\
+\\
+SET stats moves = 0 \\
+SET stats compares = 0 \\
+\\
+function max\_child(stat, array, first, last) \\
+\indent left $\leftarrow$ 2 $\times$ first \\
+\indent right $\leftarrow$ left + 1 \\
+\indent IF right <= last and (array[right - 1] > array[left - 1]) \\
+\indent \indent compares += 1 \\
+\indent \indent RETURN right \\
+\indent END IF \\
+\indent RETURN left \\
+END function \\
+\\
+\\
+function fix\_heap(stat, array, first, last) \\
+\indent found $\leftarrow$ FALSE \\
+\indent mother $\leftarrow$ first \\
+\indent great $\leftarrow$ max\_child(stat, array, mother , last) \\
+\indent WHILE mother <= last / 2 and not found \\
+\indent \indent IF array[great - 1] > array[mother - 1] \\
+\indent \indent \indent compares += 1 \\
+\indent \indent \indent SWAP array[great - 1] and array[mother - 1] \\
+\indent \indent \indent moves += 3 \\
+\indent \indent \indent mother $\leftarrow$ great \\
+\indent \indent \indent great $\leftarrow$ max\_child(stat, array, mother, last) \\
+\indent \indent ELSE \\
+\indent \indent \indent found $\leftarrow$ TRUE \\
+\indent \indent END IF \\
+\indent END WHILE \\
+END function \\
+\\
+\\
+function build\_heap(stat, array, first, last) \\
+\indent FOR i = last / 2 to (first - 1) with each step = -1\\
+\indent \indent fix\_heap(stat, array, i, last) \\
+\indent END FOR \\
+END function \\
+\\
+\\
+function heap\_sort(stat, array, length) \\
+\indent first $\leftarrow$ 1 \\
+\indent last $\leftarrow$ length \\
+\indent build\_heap(stat, array, first, last) \\
+\indent FOR i = last to first with each step = -1\\
+\indent \indent SWAP array[first - 1] and array[i - 1] \\
+\indent \indent moves += 3 \\
+\indent \indent fix\_heap(stat, array, first, i - 1) \\
+\indent END FOR \\
+END function \\
+\\
+\\
+(3) \texttt{quick.c} \\
+\\
+SET stats moves = 0 \\
+SET stats compares = 0 \\
+\\
+function partition(stat, array, lo, hi) \\
+\indent i $\leftarrow$ lo - 1 \\
+\indent FOR j = lo to hi \\
+\indent \indent IF array[hi - 1] > array[j - 1] \\
+\indent \indent \indent compares += 1 \\
+\indent \indent \indent i += 1 
+\indent \indent \indent SWAP array[i - 1] and array[j - 1] \\
+\indent \indent \indent moves += 3 \\
+\indent \indent END IF \\
+\indent END FOR \\
+\indent SWAP array[i] and array[hi - 1] \\
+\indent RETURN i + 1 \\
+END function \\
+\\
+\\
+function quick\_sorter(stat, array, lo, hi) \\
+\indent IF lo < hi \\
+\indent \indent p $\leftarrow$ partition(stat, array, lo, hi) \\
+\indent \indent quick\_sorter(stat, array, lo, p - 1) \\
+\indent \indent quick\_sorter(stat, array, p + 1, hi) \\
+\indent END IF \\
+END function \\
+\\
+\\
+function quick\_sort(stat, array, length) \\
+\indent quick\_sorter(stat, array, 1, length) \\
+END function \\
+\\
+\\
+(4) \texttt{batcher.c} \\
+\\
+SET stats moves = 0 \\
+SET stats compares = 0 \\
+\\
+function comparator(stat, array, x, y) \\
+\indent IF array[x] > array[y] \\
+\indent \indent compares += 1 \\
+\indent \indent SWAP array[x] and array[y] \\
+\indent \indent moves += 3 \\
+\indent END IF \\
+END function \\
+\\
+\\
+function batcher\_sort(stat, array, length) \\
+\indent IF n == 0 \\
+\indent \indent RETURN \\
+\indent END IF \\
+\\
+\indent t $\leftarrow$ bit length of length \\
+\indent p $\leftarrow$ 1 << (t - 1) \\
+\indent WHILE p > 0 \\
+\indent \indent q $\leftarrow$ 1 << (t - 1) \\
+\indent \indent r $\leftarrow$ 0 \\
+\indent \indent d $\leftarrow$ p \\
+\indent \indent WHILE d > 0 \\
+\indent \indent \indent FOR i = 0 to n - d \\
+\indent \indent \indent \indent IF (i AND p) == r \\
+\indent \indent \indent \indent \indent comparator(stat, array, i, i + d) \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END FOR \\
+\indent \indent \indent d $\leftarrow$ q - p \\
+\indent \indent \indent q >> $\leftarrow$ 1 \\
+\indent \indent \indent r $\leftarrow$ p \\
+\indent \indent END WHILE \\
+\indent \indent p >> $\leftarrow$ 1 \\
+\indent END WHILE \\
+END function \\
+\\
+\\
+(5) \texttt{set.c} \\
+\\
+function set\_empty() \\
+\indent RETURN 0 \\
+END function \\
+\\
+\\
+function set\_universal() \\
+\indent RETURN NOT 0 \\
+END function \\
+\\
+\\
+function set\_insert(Set s, x) \\
+\indent RETURN s OR 1 << x \\
+END function \\
+\\
+\\
+function set\_remove(Set s, x) \\
+\indent RETURN s AND NOT(1 << x) \\
+END function \\
+\\
+\\
+function set\_member(Set s, x) \\
+\indent IF (s AND (1 << x)) not 0 \\
+\indent \indent RETURN TRUE \\
+\indent ELSE \\
+\indent \indent RETURN FALSE \\
+\indent END IF \\
+END function \\
+\\
+\\
+function set\_union(Set s, Set t) \\
+\indent RETURN s OR t \\
+END function \\
+\\
+\\
+function set\_intersect(Set s, Set t) \\
+\indent RETURN s AND t \\
+END function \\
+\\
+\\
+function set\_difference(Set s, Set t) \\
+\indent RETURN s AND (NOT t) \\
+END function \\
+\\
+\\
+function set\_complement(Set s) \\
+\indent RETURN NOT s \\
+END function \\
+\\
+\\
+(6) \texttt{sorting.c} \\
+\\
+DEFINE command-line options "Hasbhqn:p:r:" \\
+\\
+DEFINE enum type for [SHELL, QUICK, HEAP, BATCHER, HELP, END] as SORTS
+\\
+function get\_randarr(array, length, seed) \\
+\indent SET random seed \\
+\indent SET mask $\leftarrow$ NOT ((1 << 31) OR (1 << 30)) \\
+\indent FOR i = 0 to length \\
+\indent \indent array[i] $\leftarrow$ random number \\
+\indent \indent array[i] $\leftarrow$ array[i] AND mask \\
+\indent END FOR \\
+END function \\
+\\
+\\
+function usage(program) \\
+\indent print(program synopsis and usage) \\
+END function \\
+\\
+\\
+function main(arguments) \\
+\indent SET function pointer array func\_ptr = [shell\_sort, quick\_sort, heap\_sort, batcher\_sort] \\
+\indent SET opt $\leftarrow$ 0 \\
+\indent SET vector $\leftarrow$ 0 \\
+\indent SET len $\leftarrow$ 100 \\
+\indent SET elements $\leftarrow$ 100 \\
+\indent SET seed $\leftarrow$ 13371453 \\
+\indent INITIATE Stats struct array arr\_stats = [{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }] \\
+\indent SET string array arr\_name = ["Shell Sort", "Quick Sort", "Heap Sort", "Batcher Sort"] \\
+\\
+\indent IF no input argument \\
+\indent \indent PRINT "Select at least one sort to perform." \\
+\indent \indent usage() \\
+\indent END IF \\
+\\
+\indent WHILE here is at least an argument \\
+\indent \indent SWITCH argument \\
+\indent \indent \indent case argument "s" do insert SHELL to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "q" do insert QUICK to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "h" do insert HEAP to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "b" do insert BATCHER to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "a" do insert SHELL, QUICK, HEAP, BATCHER to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "H" do insert HELP to vector \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "n" do len $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "p" do elements $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent case argument "r" do seed $\leftarrow$ number converted from read-in string \\
+\indent \indent \indent \indent break \\
+\indent \indent \indent default do usage() \\
+\indent \indent \indent \indent return EXIT\_FAILURE \\
+\indent \indent END SWITCH \\
+\indent END WHILE \\
+\\
+\indent SET *Array $\leftarrow$ calloc(len, sizeof(32 bits)) \\
+\\
+\indent WHILE TRUE \\
+\indent \indent IF HELP is in vector \\
+\indent \indent \indent usage() \\
+\indent \indent \indent break \\
+\indent \indent ELSE IF SHELL, QUICK, HEAP, BATCHER are all in vector \\
+\indent \indent \indent FOR s = SHELL to BATCHER \\
+\indent \indent \indent \indent get\_randarr(Array, len, seed) \\
+\indent \indent \indent \indent function pointer array func\_ptr[s](Stats struct array arr\_stats[s], Array, len) \\
+\indent \indent \indent \indent PRINT sorting method, array length, number of moves, number of compares \\
+\indent \indent \indent \indent IF elements >= len \\
+\indent \indent \indent \indent \indent FOR i = 0 to len \\
+\indent \indent \indent \indent \indent \indent IF (i + 1) is not multiple of 5 \\
+\indent \indent \indent \indent \indent \indent \indent IF i == len - 1 \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] \\
+\indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent END FOR \\
+\indent \indent \indent \indent ELSE IF elements < len \\
+\indent \indent \indent \indent \indent FOR i = 0 to elements \\
+\indent \indent \indent \indent \indent \indent IF (i + 1) is not multiple of 5 \\
+\indent \indent \indent \indent \indent \indent \indent IF i == elements - 1 \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] \\
+\indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent END FOR \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END FOR \\
+\indent \indent \indent break \\
+\indent \indent ELSE \\
+\indent \indent \indent FOR s = SHELL to BATCHER \\
+\indent \indent \indent \indent IF s in vector \\
+\indent \indent \indent \indent \indent get\_randarr(Array, len, seed) \\
+\indent \indent \indent \indent \indent function pointer array func\_ptr[s](Stats struct array arr\_stats[s], Array, len) \\
+\indent \indent \indent \indent \indent PRINT sorting method, array length, number of moves, number of compares \\
+\indent \indent \indent \indent \indent IF elements >= len \\
+\indent \indent \indent \indent \indent \indent FOR i = 0 to len \\
+\indent \indent \indent \indent \indent \indent \indent IF (i + 1) is not multiple of 5 \\
+\indent \indent \indent \indent \indent \indent \indent \indent IF i == len - 1 \\
+\indent \indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] \\
+\indent \indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent END FOR \\
+\indent \indent \indent \indent \indent ELSE IF elements < len \\
+\indent \indent \indent \indent \indent \indent FOR i = 0 to elements \\
+\indent \indent \indent \indent \indent \indent \indent IF (i + 1) is not multiple of 5 \\
+\indent \indent \indent \indent \indent \indent \indent \indent IF i == elements - 1 \\
+\indent \indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] \\
+\indent \indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent \indent ELSE \\
+\indent \indent \indent \indent \indent \indent \indent \indent PRINT Array[i] + newline \\
+\indent \indent \indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent \indent \indent END FOR \\
+\indent \indent \indent \indent \indent END IF \\
+\indent \indent \indent \indent END IF \\
+\indent \indent \indent END FOR \\
+\indent \indent \indent break \\
+\indent \indent END IF \\
+\indent END WHILE \\
+\indent free Array memory \\
+\indent RETURN 0 \\
+End function \\
+\\
+\section{Credit}
+
+\begin{itemize}
+  \item Omar's section on Feb. 1st.
+  \item Assignment 1 \texttt{monte\_carlo.c}
+\end{itemize}
+\end{document}
