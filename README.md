@@ -1,4 +1,4 @@
-# CSE 13S, Winter 2023
+# Work done in CSE 13S, Winter 2023
 
 ## Files in the root directory of your repository
 
